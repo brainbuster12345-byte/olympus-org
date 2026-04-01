@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>$100 Investment Calculator | OLYMPUS AI</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a25;
+    --surface3: #222233;
+    --gold: #d4a843;
+    --gold-light: #f0d078;
+    --gold-dim: #8a6d2b;
+    --text: #e8e8f0;
+    --text-dim: #888899;
+    --text-muted: #555566;
+    --green: #34d399;
+    --green-dim: #065f46;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --orange: #fb923c;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    padding: 2.5rem 1.5rem 1.5rem;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+  }
+  .brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dim));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+  }
+  .header p {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+  }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+  .grid { display: grid; gap: 1.5rem; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+
+  @media (max-width: 640px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid rgba(212,168,67,0.08);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: border-color 0.3s;
+  }
+  .card:hover { border-color: rgba(212,168,67,0.2); }
+  .card-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card-title .icon { font-size: 1rem; }
+
+  /* ── INPUTS ── */
+  .input-group { margin-bottom: 1.25rem; }
+  .input-group:last-child { margin-bottom: 0; }
+  .input-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+  }
+  .input-field {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--surface3);
+    border-radius: var(--radius-sm);
+    padding: 0.7rem 1rem;
+    color: var(--text);
+    font-size: 1.1rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-field:focus { border-color: var(--gold); }
+  .input-prefix {
+    position: relative;
+  }
+  .input-prefix::before {
+    content: '$';
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 1.1rem;
+    z-index: 1;
+  }
+  .input-prefix .input-field { padding-left: 1.8rem; }
+
+  /* ── RATE BUTTONS ── */
+  .rate-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+  @media (max-width: 480px) {
+    .rate-buttons { grid-template-columns: repeat(2, 1fr); }
+  }
+  .rate-btn {
+    background: var(--surface2);
+    border: 1px solid var(--surface3);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.4rem;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .rate-btn:hover { border-color: var(--gold-dim); }
+  .rate-btn.active {
+    background: linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05));
+    border-color: var(--gold);
+    color: var(--gold-light);
+    box-shadow: 0 0 12px rgba(212,168,67,0.1);
+  }
+  .rate-btn .label { display: block; font-size: 0.65rem; color: var(--text-dim); margin-top: 0.15rem; font-weight: 400; }
+  .rate-btn.active .label { color: var(--gold-dim); }
+
+  .custom-rate-input {
+    display: none;
+    margin-top: 0.5rem;
+  }
+  .custom-rate-input.visible { display: block; }
+
+  /* ── SLIDER ── */
+  .slider-container { position: relative; padding-top: 0.25rem; }
+  .slider-value {
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--gold-light);
+    margin-bottom: 0.5rem;
+  }
+  .slider-value span { font-size: 0.85rem; font-weight: 500; color: var(--text-dim); }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--surface3);
+    border-radius: 3px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    background: var(--gold);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(212,168,67,0.4);
+    transition: transform 0.15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    background: var(--gold);
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(212,168,67,0.4);
+  }
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 0.35rem;
+  }
+
+  /* ── RESULTS ── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 480px) {
+    .results-grid { grid-template-columns: 1fr; }
+  }
+  .result-card {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    text-align: center;
+    border: 1px solid var(--surface3);
+  }
+  .result-card.highlight {
+    background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(212,168,67,0.02));
+    border-color: rgba(212,168,67,0.3);
+  }
+  .result-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 0.3rem;
+  }
+  .result-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .result-card.highlight .result-value {
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .result-sub {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+  }
+  .result-value.green { color: var(--green); }
+
+  /* ── CHART ── */
+  .chart-container {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    margin: 1rem 0 0.5rem;
+  }
+  .chart-svg {
+    width: 100%;
+    height: 100%;
+  }
+  .chart-grid line { stroke: var(--surface3); stroke-width: 1; }
+  .chart-line {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 6px rgba(212,168,67,0.3));
+  }
+  .chart-area {
+    fill: url(#goldGradient);
+    opacity: 0.3;
+  }
+  .chart-dot {
+    fill: var(--gold);
+    stroke: var(--bg);
+    stroke-width: 2;
+    cursor: pointer;
+    transition: r 0.15s;
+  }
+  .chart-dot:hover { r: 6; }
+  .chart-label-x {
+    font-size: 10px;
+    fill: var(--text-muted);
+    text-anchor: middle;
+  }
+  .chart-label-y {
+    font-size: 10px;
+    fill: var(--text-muted);
+    text-anchor: end;
+  }
+  .chart-tooltip {
+    position: absolute;
+    background: var(--surface2);
+    border: 1px solid var(--gold-dim);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10;
+    white-space: nowrap;
+  }
+  .chart-tooltip.visible { opacity: 1; }
+  .chart-tooltip .tt-year { color: var(--gold); font-weight: 700; }
+  .chart-tooltip .tt-value { color: var(--green); font-weight: 600; }
+
+  /* ── BREAKDOWN PIE ── */
+  .breakdown-section { display: flex; gap: 1.5rem; align-items: center; }
+  @media (max-width: 480px) {
+    .breakdown-section { flex-direction: column; }
+  }
+  .pie-container {
+    flex-shrink: 0;
+    width: 150px;
+    height: 150px;
+    position: relative;
+  }
+  .pie-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .pie-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .pie-center .amount {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--gold-light);
+  }
+  .pie-center .sub {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .breakdown-legend { flex: 1; }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--surface3);
+  }
+  .legend-item:last-child { border-bottom: none; }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-name { font-size: 0.85rem; font-weight: 500; flex: 1; }
+  .legend-pct { font-size: 0.85rem; font-weight: 700; color: var(--gold-light); }
+  .legend-amt { font-size: 0.75rem; color: var(--text-dim); margin-left: 0.25rem; }
+  .legend-desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+  /* ── PLATFORMS ── */
+  .platforms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  .platform-card {
+    background: var(--surface2);
+    border: 1px solid var(--surface3);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    transition: all 0.25s;
+    cursor: default;
+  }
+  .platform-card:hover {
+    border-color: var(--gold-dim);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  .platform-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .platform-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .platform-name { font-weight: 700; font-size: 1rem; }
+  .platform-tag {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    margin-left: auto;
+  }
+  .tag-invest { background: rgba(52,211,153,0.15); color: var(--green); }
+  .tag-savings { background: rgba(96,165,250,0.15); color: var(--blue); }
+  .tag-crypto { background: rgba(167,139,250,0.15); color: var(--purple); }
+  .platform-desc {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+  }
+  .platform-pros, .platform-cons {
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .platform-pros::before { content: '✓ '; color: var(--green); font-weight: 700; }
+  .platform-cons::before { content: '✗ '; color: var(--red); font-weight: 700; }
+  .platform-pros { color: var(--text-dim); }
+  .platform-cons { color: var(--text-muted); }
+  .platform-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    color: var(--gold-dim);
+    margin-top: 0.5rem;
+    padding: 0.2rem 0.5rem;
+    background: rgba(212,168,67,0.08);
+    border-radius: 4px;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+  }
+  .footer .brand-mark {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold-dim);
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    margin-bottom: 0.25rem;
+  }
+
+  /* ── ANIMATIONS ── */
+  .fade-in {
+    animation: fadeIn 0.5s ease-out both;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+  /* ── SECTION DIVIDERS ── */
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    margin: 0.5rem 0;
+    opacity: 0.4;
+  }
+</style>
+</head>
+<body>
+
+<div class="header fade-in">
+  <div class="brand">Olympus AI</div>
+  <h1>$100 Investment Calculator</h1>
+  <p>See how small amounts grow into real wealth</p>
+</div>
+
+<div class="container">
+
+  <!-- INPUTS -->
+  <div class="grid grid-2 fade-in delay-1" style="margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="card-title"><span class="icon">💰</span> Your Investment</div>
+      <div class="input-group">
+        <label class="input-label">Starting Amount</label>
+        <div class="input-prefix">
+          <input type="number" class="input-field" id="startAmount" value="100" min="1" max="1000000">
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Monthly Contribution</label>
+        <div class="input-prefix">
+          <input type="number" class="input-field" id="monthly" value="25" min="0" max="100000">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">📈</span> Rate & Time</div>
+      <div class="input-group">
+        <label class="input-label">Expected Annual Return</label>
+        <div class="rate-buttons" id="rateButtons">
+          <button class="rate-btn" data-rate="4" onclick="setRate(4)">
+            4%<span class="label">Savings</span>
+          </button>
+          <button class="rate-btn active" data-rate="7" onclick="setRate(7)">
+            7%<span class="label">Index Funds</span>
+          </button>
+          <button class="rate-btn" data-rate="10" onclick="setRate(10)">
+            10%<span class="label">Aggressive</span>
+          </button>
+          <button class="rate-btn" data-rate="custom" onclick="setRate('custom')">
+            Custom<span class="label">Your Rate</span>
+          </button>
+        </div>
+        <div class="custom-rate-input" id="customRateWrap">
+          <div class="input-prefix">
+            <input type="number" class="input-field" id="customRate" value="8" min="0" max="50" step="0.1" placeholder="e.g. 8.5">
+          </div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Time Horizon</label>
+        <div class="slider-container">
+          <div class="slider-value"><span id="yearsDisplay">10</span> <span>years</span></div>
+          <input type="range" id="yearsSlider" min="1" max="30" value="10">
+          <div class="slider-labels"><span>1 yr</span><span>15 yrs</span><span>30 yrs</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="card fade-in delay-2" style="margin-bottom:1.5rem;">
+    <div class="card-title"><span class="icon">⚡</span> Your Results</div>
+    <div class="results-grid">
+      <div class="result-card">
+        <div class="result-label">Total Invested</div>
+        <div class="result-value" id="totalInvested">$3,100</div>
+        <div class="result-sub" id="investedSub">$100 + 120 months</div>
+      </div>
+      <div class="result-card">
+        <div class="result-label">Interest Earned</div>
+        <div class="result-value green" id="interestEarned">$1,234</div>
+        <div class="result-sub" id="interestSub">free money 🎉</div>
+      </div>
+      <div class="result-card highlight">
+        <div class="result-label">Final Portfolio</div>
+        <div class="result-value" id="finalValue">$4,334</div>
+        <div class="result-sub" id="finalSub">7% annual return</div>
+      </div>
+    </div>
+
+    <!-- CHART -->
+    <div style="position:relative;">
+      <div class="chart-tooltip" id="chartTooltip"></div>
+      <div class="chart-container" id="chartContainer">
+        <svg class="chart-svg" id="chartSvg" viewBox="0 0 800 220" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#d4a843" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#d4a843" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- BREAKDOWN -->
+  <div class="card fade-in delay-3" style="margin-bottom:1.5rem;">
+    <div class="card-title"><span class="icon">🧩</span> $100 Starter Split — How to Divide Your First Investment</div>
+    <div class="breakdown-section">
+      <div class="pie-container">
+        <svg class="pie-svg" viewBox="0 0 200 200" id="pieSvg"></svg>
+        <div class="pie-center">
+          <div class="amount">$100</div>
+          <div class="sub">starting</div>
+        </div>
+      </div>
+      <div class="breakdown-legend" id="breakdownLegend"></div>
+    </div>
+  </div>
+
+  <!-- PLATFORMS -->
+  <div class="card fade-in delay-4" style="margin-bottom:1.5rem;">
+    <div class="card-title"><span class="icon">📱</span> Tap-to-Invest Platforms — Set Up in Under 5 Minutes</div>
+    <div class="platforms-grid" id="platformsGrid"></div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div class="brand-mark">OLYMPUS AI</div>
+  <p>Built by Vulcan 🔨 · Calculations are estimates, not financial advice</p>
+</div>
+
+<script>
+// ── STATE ──
+let selectedRate = 7;
+let isCustom = false;
+
+// ── ELEMENTS ──
+const startEl = document.getElementById('startAmount');
+const monthlyEl = document.getElementById('monthly');
+const yearsEl = document.getElementById('yearsSlider');
+const yearsDisp = document.getElementById('yearsDisplay');
+const customWrap = document.getElementById('customRateWrap');
+const customRateEl = document.getElementById('customRate');
+
+// ── RATE SELECTION ──
+function setRate(rate) {
+  document.querySelectorAll('.rate-btn').forEach(b => b.classList.remove('active'));
+  if (rate === 'custom') {
+    isCustom = true;
+    customWrap.classList.add('visible');
+    document.querySelector('[data-rate="custom"]').classList.add('active');
+    selectedRate = parseFloat(customRateEl.value) || 7;
+  } else {
+    isCustom = false;
+    customWrap.classList.remove('visible');
+    selectedRate = rate;
+    document.querySelector(`[data-rate="${rate}"]`).classList.add('active');
+  }
+  calculate();
+}
+
+// ── CALCULATION ──
+function calculate() {
+  const P = parseFloat(startEl.value) || 0;
+  const M = parseFloat(monthlyEl.value) || 0;
+  const years = parseInt(yearsEl.value);
+  const r = isCustom ? (parseFloat(customRateEl.value) || 0) : selectedRate;
+  const rate = r / 100;
+  const monthlyRate = rate / 12;
+  const months = years * 12;
+
+  yearsDisp.textContent = years;
+
+  // Future value: FV = P*(1+r/12)^n + M*[((1+r/12)^n - 1)/(r/12)]
+  let fv;
+  if (monthlyRate === 0) {
+    fv = P + M * months;
+  } else {
+    fv = P * Math.pow(1 + monthlyRate, months) + M * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
+  }
+
+  const totalInvested = P + M * months;
+  const interest = fv - totalInvested;
+
+  document.getElementById('totalInvested').textContent = fmt(totalInvested);
+  document.getElementById('investedSub').textContent = `${fmt(P)} + ${months} months`;
+  document.getElementById('interestEarned').textContent = fmt(interest);
+  document.getElementById('interestSub').textContent = interest > 0 ? 'free money 🎉' : '—';
+  document.getElementById('finalValue').textContent = fmt(fv);
+  document.getElementById('finalSub').textContent = `${r}% annual return`;
+
+  // Yearly data
+  const data = [];
+  for (let y = 0; y <= years; y++) {
+    const m = y * 12;
+    let val;
+    if (monthlyRate === 0) {
+      val = P + M * m;
+    } else {
+      val = m === 0 ? P : P * Math.pow(1 + monthlyRate, m) + M * ((Math.pow(1 + monthlyRate, m) - 1) / monthlyRate);
+    }
+    data.push({ year: y, value: val });
+  }
+
+  drawChart(data);
+}
+
+// ── CHART ──
+function drawChart(data) {
+  const svg = document.getElementById('chartSvg');
+  const W = 800, H = 220;
+  const pad = { top: 15, right: 20, bottom: 28, left: 55 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+
+  const maxVal = Math.max(...data.map(d => d.value), 1);
+  const minVal = 0;
+  const range = maxVal - minVal || 1;
+
+  // Decide which years to show as x-labels
+  const totalYears = data.length - 1;
+  const labelStep = totalYears <= 10 ? 1 : totalYears <= 20 ? 2 : 5;
+
+  const x = (i) => pad.left + (i / totalYears) * cw;
+  const y = (v) => pad.top + ch - ((v - minVal) / range) * ch;
+
+  let html = '';
+
+  // Grid lines (y-axis)
+  const yTicks = 4;
+  for (let i = 0; i <= yTicks; i++) {
+    const val = minVal + (i / yTicks) * range;
+    const yPos = y(val);
+    html += `<line class="chart-grid" x1="${pad.left}" y1="${yPos}" x2="${W - pad.right}" y2="${yPos}"/>`;
+    html += `<text class="chart-label-y" x="${pad.left - 8}" y="${yPos + 3}">${shortFmt(val)}</text>`;
+  }
+
+  // X-axis labels
+  for (let i = 0; i <= totalYears; i += labelStep) {
+    html += `<text class="chart-label-x" x="${x(i)}" y="${H - 4}">Y${i}</text>`;
+  }
+  // Always show last
+  if (totalYears % labelStep !== 0) {
+    html += `<text class="chart-label-x" x="${x(totalYears)}" y="${H - 4}">Y${totalYears}</text>`;
+  }
+
+  // Area path
+  let areaD = `M ${x(0)} ${y(data[0].value)}`;
+  for (let i = 1; i < data.length; i++) {
+    areaD += ` L ${x(i)} ${y(data[i].value)}`;
+  }
+  areaD += ` L ${x(totalYears)} ${y(0)} L ${x(0)} ${y(0)} Z`;
+  html += `<path class="chart-area" d="${areaD}"/>`;
+
+  // Line path
+  let lineD = `M ${x(0)} ${y(data[0].value)}`;
+  for (let i = 1; i < data.length; i++) {
+    lineD += ` L ${x(i)} ${y(data[i].value)}`;
+  }
+  html += `<path class="chart-line" d="${lineD}"/>`;
+
+  // Dots
+  for (let i = 0; i < data.length; i++) {
+    html += `<circle class="chart-dot" cx="${x(i)}" cy="${y(data[i].value)}" r="4"
+      data-year="${data[i].year}" data-value="${data[i].value}"
+      onmouseenter="showTip(evt)" onmouseleave="hideTip()"/>`;
+  }
+
+  svg.innerHTML = html;
+}
+
+function showTip(evt) {
+  const el = evt.target;
+  const tip = document.getElementById('chartTooltip');
+  const year = el.getAttribute('data-year');
+  const val = parseFloat(el.getAttribute('data-value'));
+  tip.innerHTML = `<span class="tt-year">Year ${year}</span> · <span class="tt-value">${fmt(val)}</span>`;
+  tip.classList.add('visible');
+
+  const container = document.getElementById('chartContainer');
+  const rect = container.getBoundingClientRect();
+  const cx = parseFloat(el.getAttribute('cx'));
+  const cy = parseFloat(el.getAttribute('cy'));
+  const svgW = 800;
+  const scale = rect.width / svgW;
+
+  tip.style.left = (cx * scale - tip.offsetWidth / 2) + 'px';
+  tip.style.top = (cy * scale - tip.offsetHeight - 10) + 'px';
+}
+function hideTip() {
+  document.getElementById('chartTooltip').classList.remove('visible');
+}
+
+// ── PIE CHART ──
+const breakdown = [
+  { name: 'Index Funds (S&P 500)', pct: 50, color: '#d4a843', desc: 'Low-cost, broad market exposure' },
+  { name: 'Individual Stocks', pct: 25, color: '#34d399', desc: 'Growth picks you believe in' },
+  { name: 'Emergency Buffer', pct: 25, color: '#60a5fa', desc: 'Liquid savings for emergencies' },
+];
+
+function drawPie() {
+  const svg = document.getElementById('pieSvg');
+  const cx = 100, cy = 100, r = 70, r2 = 45;
+  let cumAngle = 0;
+  let paths = '';
+
+  breakdown.forEach(seg => {
+    const angle = (seg.pct / 100) * 360;
+    const startRad = (cumAngle * Math.PI) / 180;
+    const endRad = ((cumAngle + angle) * Math.PI) / 180;
+    const largeArc = angle > 180 ? 1 : 0;
+
+    const x1 = cx + r * Math.cos(startRad);
+    const y1 = cy + r * Math.sin(startRad);
+    const x2 = cx + r * Math.cos(endRad);
+    const y2 = cy + r * Math.sin(endRad);
+    const x3 = cx + r2 * Math.cos(endRad);
+    const y3 = cy + r2 * Math.sin(endRad);
+    const x4 = cx + r2 * Math.cos(startRad);
+    const y4 = cy + r2 * Math.sin(startRad);
+
+    paths += `<path d="M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${r2} ${r2} 0 ${largeArc} 0 ${x4} ${y4} Z"
+      fill="${seg.color}" opacity="0.85" stroke="var(--bg)" stroke-width="2"/>`;
+    cumAngle += angle;
+  });
+
+  svg.innerHTML = paths;
+
+  // Legend
+  const legend = document.getElementById('breakdownLegend');
+  legend.innerHTML = breakdown.map(seg => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${seg.color}"></div>
+      <div style="flex:1">
+        <div class="legend-name">${seg.name} <span class="legend-pct">${seg.pct}%</span> <span class="legend-amt">($${seg.pct})</span></div>
+        <div class="legend-desc">${seg.desc}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── PLATFORMS ──
+const platforms = [
+  {
+    name: 'Robinhood',
+    icon: '🟢', iconBg: '#1a1a1a', iconText: 'RH',
+    tag: 'Invest', tagClass: 'tag-invest',
+    desc: 'Commission-free stock, ETF, options & crypto trading. Fractional shares from $1.',
+    pros: 'Zero commissions, fractional shares, instant deposits',
+    cons: 'Limited research tools, gamified UI can encourage overtrading',
+    time: '⏱ ~3 min signup, instant buying power'
+  },
+  {
+    name: 'Fidelity',
+    icon: '🟢', iconBg: '#1a3a1a', iconText: 'FD',
+    tag: 'Invest', tagClass: 'tag-invest',
+    desc: 'Full-service brokerage with a slick mobile app. Zero-fee index funds (FXAIX, FZROX).',
+    pros: 'Best-in-class research, zero-fee funds, no account minimums',
+    cons: 'App can feel dense for beginners, options approval takes time',
+    time: '⏱ ~5 min signup, ACH in 1-2 days'
+  },
+  {
+    name: 'Wealthfront',
+    icon: '🟢', iconBg: '#0a2a3a', iconText: 'WF',
+    tag: 'Invest', tagClass: 'tag-invest',
+    desc: 'Automated investing with tax-loss harvesting. Set it and forget it robo-advisor.',
+    pros: 'Auto-rebalancing, tax-loss harvesting, low 0.25% fee',
+    cons: 'No self-directed stock picking, $500 minimum',
+    time: '⏱ ~4 min setup, choose risk level & done'
+  },
+  {
+    name: 'Coinbase',
+    icon: '🟣', iconBg: '#1a103a', iconText: 'CB',
+    tag: 'Crypto', tagClass: 'tag-crypto',
+    desc: 'Largest US crypto exchange. Buy Bitcoin, Ethereum & 200+ coins from your phone.',
+    pros: 'Easiest crypto onboarding, insured USD, recurring buys',
+    cons: 'Higher fees than competitors (1.5-3%), limited altcoin selection vs exchanges',
+    time: '⏱ ~3 min signup, instant card purchases'
+  },
+  {
+    name: 'Marcus by Goldman Sachs',
+    icon: '🔵', iconBg: '#0a1a3a', iconText: 'GS',
+    tag: 'Savings', tagClass: 'tag-savings',
+    desc: 'High-yield savings account with no fees or minimums. Park your emergency fund here.',
+    pros: 'Competitive APY, no fees/minimums, FDIC insured',
+    cons: 'No checking/debit card, no physical branches, transfers take 1-3 days',
+    time: '⏱ ~4 min signup, link bank & transfer'
+  },
+];
+
+function renderPlatforms() {
+  const grid = document.getElementById('platformsGrid');
+  grid.innerHTML = platforms.map(p => `
+    <div class="platform-card">
+      <div class="platform-header">
+        <div class="platform-icon" style="background:${p.iconBg};color:#fff;font-size:0.8rem;">${p.iconText}</div>
+        <div class="platform-name">${p.name}</div>
+        <span class="platform-tag ${p.tagClass}">${p.tag}</span>
+      </div>
+      <div class="platform-desc">${p.desc}</div>
+      <div class="platform-pros">${p.pros}</div>
+      <div class="platform-cons">${p.cons}</div>
+      <div class="platform-time">${p.time}</div>
+    </div>
+  `).join('');
+}
+
+// ── FORMATTING ──
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('en-US');
+}
+function shortFmt(n) {
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '$' + (n / 1000).toFixed(0) + 'K';
+  return '$' + Math.round(n);
+}
+
+// ── EVENT LISTENERS ──
+[startEl, monthlyEl, yearsEl, customRateEl].forEach(el => {
+  el.addEventListener('input', calculate);
+});
+
+// ── INIT ──
+drawPie();
+renderPlatforms();
+calculate();
+</script>
+
+</body>
+</html>
