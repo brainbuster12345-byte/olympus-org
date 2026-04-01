@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OLYMPUS — AI Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #1f1f35;
+            --bg-input: #16162a;
+            --accent-gold: #d4a843;
+            --accent-gold-dim: rgba(212, 168, 67, 0.15);
+            --accent-blue: #4a9eff;
+            --accent-purple: #8b5cf6;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888a8;
+            --text-dim: #555570;
+            --border: #2a2a45;
+            --border-light: #33335a;
+            --glow-gold: 0 0 30px rgba(212, 168, 67, 0.2);
+            --glow-blue: 0 0 20px rgba(74, 158, 255, 0.15);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ═══════════ LOGIN SCREEN ═══════════ */
+        .login-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            background: var(--bg-primary);
+            transition: opacity 0.6s, visibility 0.6s;
+        }
+
+        .login-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .login-bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(212, 168, 67, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(212, 168, 67, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .login-container {
+            position: relative;
+            width: 420px;
+            max-width: 90vw;
+            padding: 48px 40px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-logo {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            color: var(--accent-gold);
+            margin-bottom: 8px;
+        }
+
+        .login-title {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, var(--accent-gold), #f0d078);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-subtitle {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 36px;
+            letter-spacing: 1px;
+        }
+
+        .login-field {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .login-field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .login-field input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .login-field input:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px var(--accent-gold-dim);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            background: linear-gradient(135deg, var(--accent-gold), #c49530);
+            border: none;
+            border-radius: 10px;
+            color: #0a0a0f;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--glow-gold);
+        }
+
+        .login-error {
+            color: var(--accent-red);
+            font-size: 13px;
+            margin-top: 12px;
+            min-height: 20px;
+        }
+
+        .login-hint {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 20px;
+        }
+
+        /* ═══════════ MAIN APP ═══════════ */
+        .app {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .app.active { display: flex; }
+
+        /* ═══════════ SIDEBAR ═══════════ */
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-brand h1 {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: var(--accent-gold);
+        }
+
+        .sidebar-brand span {
+            font-size: 10px;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+        }
+
+        .nav-section-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            padding: 12px 12px 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-gold-dim);
+            color: var(--accent-gold);
+        }
+
+        .nav-item .icon {
+            width: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            background: var(--accent-gold);
+            color: #0a0a0f;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-footer .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-gold), #f0d078);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #0a0a0f;
+        }
+
+        .sidebar-footer .user-info {
+            flex: 1;
+        }
+
+        .sidebar-footer .user-name {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .sidebar-footer .user-role {
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px;
+            border-radius: 4px;
+            transition: color 0.2s;
+        }
+
+        .logout-btn:hover { color: var(--accent-red); }
+
+        /* ═══════════ MAIN CONTENT ═══════════ */
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-secondary);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(20px);
+        }
+
+        .topbar h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-green);
+            letter-spacing: 1px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        /* ═══════════ DASHBOARD ═══════════ */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: transform 0.2s, border-color 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-light);
+        }
+
+        .stat-card .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-card .stat-change {
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .stat-change.up { color: var(--accent-green); }
+        .stat-change.down { color: var(--accent-red); }
+
+        /* ═══════════ ORG CHART ═══════════ */
+        .org-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            padding: 40px 0;
+        }
+
+        .org-node {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 32px;
+            text-align: center;
+            min-width: 280px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .org-node:hover {
+            border-color: var(--accent-gold);
+            box-shadow: var(--glow-gold);
+        }
+
+        .org-node.ceo {
+            border-color: var(--accent-gold);
+            background: linear-gradient(135deg, rgba(212, 168, 67, 0.1), var(--bg-card));
+        }
+
+        .org-node.exec {
+            border-color: var(--accent-blue);
+            min-width: 220px;
+        }
+
+        .org-node.agent {
+            border-color: var(--border);
+            min-width: 200px;
+        }
+
+        .org-node .role-badge {
+            display: inline-block;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .role-badge.ceo-badge { background: var(--accent-gold-dim); color: var(--accent-gold); }
+        .role-badge.exec-badge { background: rgba(74, 158, 255, 0.15); color: var(--accent-blue); }
+        .role-badge.agent-badge { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+
+        .org-node .name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .org-node .title {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .org-node .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 10px;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .status.online { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); }
+        .status.idle { background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); }
+
+        .org-connector {
+            width: 2px;
+            height: 30px;
+            background: var(--border-light);
+        }
+
+        .org-row {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .org-branch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .org-horizontal-line {
+            height: 2px;
+            background: var(--border-light);
+            width: 100%;
+            max-width: 700px;
+            position: relative;
+        }
+
+        .org-horizontal-line::before,
+        .org-horizontal-line::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--border-light);
+            transform: translateY(-50%);
+        }
+
+        .org-horizontal-line::before { left: 0; }
+        .org-horizontal-line::after { right: 0; }
+
+        /* ═══════════ TEAM CARDS ═══════════ */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .team-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+
+        .team-card:hover {
+            border-color: var(--border-light);
+            transform: translateY(-2px);
+        }
+
+        .team-card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .team-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .team-avatar.zeus { background: linear-gradient(135deg, #d4a843, #f0d078); color: #0a0a0f; }
+        .team-avatar.athena { background: linear-gradient(135deg, #4a9eff, #7ab8ff); color: #0a0a0f; }
+        .team-avatar.hermes { background: linear-gradient(135deg, #22c55e, #4ade80); color: #0a0a0f; }
+        .team-avatar.vulcan { background: linear-gradient(135deg, #ef4444, #f87171); color: #0a0a0f; }
+
+        .team-card-header .info h3 {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .team-card-header .info span {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .team-card .description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .team-card .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .skill-tag {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        /* ═══════════ TASKS ═══════════ */
+        .task-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent-gold-dim);
+            color: var(--accent-gold);
+            border-color: var(--accent-gold);
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .task-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .task-item:hover {
+            border-color: var(--border-light);
+            background: var(--bg-card-hover);
+        }
+
+        .task-check {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid var(--border-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .task-check.done {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .task-check.done::after {
+            content: '✓';
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .task-info { flex: 1; }
+
+        .task-info .task-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+            color: var(--text-dim);
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .task-meta span {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .task-priority {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .priority-high { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+        .priority-medium { background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); }
+        .priority-low { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); }
+
+        .task-assignee {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-blue);
+        }
+
+        .add-task-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .add-task-bar input {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .add-task-bar input:focus {
+            border-color: var(--accent-gold);
+        }
+
+        .add-task-bar select {
+            padding: 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .add-task-btn {
+            padding: 12px 20px;
+            background: var(--accent-gold);
+            border: none;
+            border-radius: 10px;
+            color: #0a0a0f;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .add-task-btn:hover { transform: translateY(-1px); }
+
+        /* ═══════════ ACTIVITY LOG ═══════════ */
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .activity-item::before {
+            content: '';
+            position: absolute;
+            left: 17px;
+            top: 40px;
+            bottom: -1px;
+            width: 1px;
+            background: var(--border);
+        }
+
+        .activity-item:last-child::before { display: none; }
+
+        .activity-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+
+        .activity-dot.gold { background: var(--accent-gold); }
+        .activity-dot.blue { background: var(--accent-blue); }
+        .activity-dot.green { background: var(--accent-green); }
+        .activity-dot.purple { background: var(--accent-purple); }
+
+        .activity-content .activity-text {
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .activity-content .activity-text strong {
+            color: var(--accent-gold);
+        }
+
+        .activity-content .activity-time {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        /* ═══════════ MESSAGES / DIRECTOR ═══════════ */
+        .message-panel {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 140px);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .message-bubble.from-user {
+            align-self: flex-end;
+            background: var(--accent-gold-dim);
+            border: 1px solid rgba(212, 168, 67, 0.3);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-bubble.from-agent {
+            align-self: flex-start;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-bubble .msg-sender {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            color: var(--accent-blue);
+        }
+
+        .message-bubble .msg-time {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 6px;
+        }
+
+        .message-input-bar {
+            display: flex;
+            gap: 10px;
+            padding: 16px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .message-input-bar input {
+            flex: 1;
+            padding: 14px 18px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .message-input-bar input:focus {
+            border-color: var(--accent-gold);
+        }
+
+        .send-btn {
+            padding: 14px 24px;
+            background: var(--accent-gold);
+            border: none;
+            border-radius: 12px;
+            color: #0a0a0f;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .send-btn:hover { transform: translateY(-1px); }
+
+        /* ═══════════ SECTION PAGES ═══════════ */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+        }
+
+        /* ═══════════ COMMANDS PANEL ═══════════ */
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 12px;
+        }
+
+        .command-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .command-card:hover {
+            border-color: var(--accent-gold);
+            transform: translateY(-2px);
+        }
+
+        .command-card .cmd-icon {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .command-card .cmd-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .command-card .cmd-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* ═══════════ SCROLLBAR ═══════════ */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+        /* ═══════════ RESPONSIVE ═══════════ */
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar .nav-item span,
+            .sidebar .nav-section-label,
+            .sidebar-brand h1,
+            .sidebar-brand span,
+            .sidebar-footer .user-info,
+            .logout-btn { display: none; }
+            .sidebar-brand { padding: 16px; text-align: center; }
+            .sidebar-brand::after { content: '⚡'; font-size: 20px; }
+            .main { margin-left: 60px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .org-row { flex-direction: column; align-items: center; }
+        }
+
+        /* ═══════════ ANIMATIONS ═══════════ */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .two-col { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN ═══════════ -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-bg-grid"></div>
+    <div class="login-container fade-in">
+        <div class="login-logo">⚡</div>
+        <div class="login-title">OLYMPUS</div>
+        <div class="login-subtitle">AI Command Center</div>
+        <div class="login-field">
+            <label>Username</label>
+            <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off">
+        </div>
+        <div class="login-field">
+            <label>Password</label>
+            <input type="password" id="loginPass" placeholder="Enter password">
+        </div>
+        <button class="login-btn" onclick="handleLogin()">Enter Olympus</button>
+        <div class="login-error" id="loginError"></div>
+        <div class="login-hint">Default: admin / olympus2025</div>
+    </div>
+</div>
+
+<!-- ═══════════ APP ═══════════ -->
+<div class="app" id="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1>Olympus</h1>
+            <span>AI Command Center</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Command</div>
+            <div class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')">
+                <span class="icon">📊</span><span>Dashboard</span>
+            </div>
+            <div class="nav-item" data-page="org" onclick="switchPage('org')">
+                <span class="icon">🏛️</span><span>Organization</span>
+            </div>
+            <div class="nav-item" data-page="team" onclick="switchPage('team')">
+                <span class="icon">👥</span><span>Executive Team</span>
+            </div>
+
+            <div class="nav-section-label">Operations</div>
+            <div class="nav-item" data-page="tasks" onclick="switchPage('tasks')">
+                <span class="icon">📋</span><span>Tasks</span>
+                <span class="badge" id="taskBadge">0</span>
+            </div>
+            <div class="nav-item" data-page="direct" onclick="switchPage('direct')">
+                <span class="icon">💬</span><span>Direct Agent</span>
+            </div>
+            <div class="nav-item" data-page="commands" onclick="switchPage('commands')">
+                <span class="icon">⚡</span><span>Quick Commands</span>
+            </div>
+
+            <div class="nav-section-label">Intel</div>
+            <div class="nav-item" data-page="activity" onclick="switchPage('activity')">
+                <span class="icon">📡</span><span>Activity Log</span>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="avatar">M</div>
+            <div class="user-info">
+                <div class="user-name">Moses</div>
+                <div class="user-role">CEO — Founder</div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()" title="Logout">⏻</button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <div class="topbar">
+            <h2 id="pageTitle">Dashboard</h2>
+            <div class="topbar-actions">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    ALL SYSTEMS OPERATIONAL
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <!-- DASHBOARD PAGE -->
+            <div class="page active" id="page-dashboard">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label">Active Agents</div>
+                        <div class="stat-value">3</div>
+                        <div class="stat-change up">● All Online</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Open Tasks</div>
+                        <div class="stat-value" id="statOpenTasks">0</div>
+                        <div class="stat-change up">↑ Ready for dispatch</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Completed Today</div>
+                        <div class="stat-value" id="statCompleted">0</div>
+                        <div class="stat-change up">↑ Keep it going</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Uptime</div>
+                        <div class="stat-value">24/7</div>
+                        <div class="stat-change up">● Operational</div>
+                    </div>
+                </div>
+
+                <div class="two-col">
+                    <div>
+                        <div class="section-title"><span class="dot"></span> Recent Activity</div>
+                        <div class="activity-feed" id="dashboardActivity"></div>
+                    </div>
+                    <div>
+                        <div class="section-title"><span class="dot"></span> Priority Tasks</div>
+                        <div class="task-list" id="dashboardTasks"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ORG CHART PAGE -->
+            <div class="page" id="page-org">
+                <div class="section-title"><span class="dot"></span> Organizational Structure</div>
+                <div class="org-chart">
+                    <!-- CEO -->
+                    <div class="org-node ceo">
+                        <div class="role-badge ceo-badge">Chief Executive Officer</div>
+                        <div class="name">Moses</div>
+                        <div class="title">Founder & CEO</div>
+                        <div class="status online"><div class="status-dot" style="width:6px;height:6px;"></div> Online</div>
+                    </div>
+                    <div class="org-connector"></div>
+                    <!-- COO -->
+                    <div class="org-node exec">
+                        <div class="role-badge exec-badge">Chief Operating Officer</div>
+                        <div class="name">⚡ Zeus</div>
+                        <div class="title">COO — Operations & Orchestration</div>
+                        <div class="status online"><div class="status-dot" style="width:6px;height:6px;"></div> Active</div>
+                    </div>
+                    <div class="org-connector"></div>
+                    <div class="org-horizontal-line"></div>
+                    <!-- AGENTS -->
+                    <div class="org-row">
+                        <div class="org-branch">
+                            <div class="org-node agent">
+                                <div class="role-badge agent-badge">Strategy Agent</div>
+                                <div class="name">🦉 Athena</div>
+                                <div class="title">Strategy & Analysis</div>
+                                <div class="status online"><div class="status-dot" style="width:6px;height:6px;"></div> Active</div>
+                            </div>
+                        </div>
+                        <div class="org-branch">
+                            <div class="org-node agent">
+                                <div class="role-badge agent-badge">Comms Agent</div>
+                                <div class="name">🪽 Hermes</div>
+                                <div class="title">Communications & Logistics</div>
+                                <div class="status online"><div class="status-dot" style="width:6px;height:6px;"></div> Active</div>
+                            </div>
+                        </div>
+                        <div class="org-branch">
+                            <div class="org-node agent">
+                                <div class="role-badge agent-badge">Engineering Agent</div>
+                                <div class="name">🔨 Vulcan</div>
+                                <div class="title">Engineering & Operations</div>
+                                <div class="status online"><div class="status-dot" style="width:6px;height:6px;"></div> Active</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TEAM PAGE -->
+            <div class="page" id="page-team">
+                <div class="section-title"><span class="dot"></span> Executive Team</div>
+                <div class="team-grid">
+                    <div class="team-card">
+                        <div class="team-card-header">
+                            <div class="team-avatar zeus">⚡</div>
+                            <div class="info">
+                                <h3>Zeus</h3>
+                                <span>COO — Chief Operating Officer</span>
+                            </div>
+                        </div>
+                        <div class="description">Orchestrates all operations, delegates tasks to agents, ensures everything runs on time. Your right hand — translates your vision into executed action.</div>
+                        <div class="skills">
+                            <span class="skill-tag">Orchestration</span>
+                            <span class="skill-tag">Delegation</span>
+                            <span class="skill-tag">Task Management</span>
+                            <span class="skill-tag">Quality Control</span>
+                            <span class="skill-tag">Reporting</span>
+                        </div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-card-header">
+                            <div class="team-avatar athena">🦉</div>
+                            <div class="info">
+                                <h3>Athena</h3>
+                                <span>Strategy & Analysis Agent</span>
+                            </div>
+                        </div>
+                        <div class="description">Research, competitive analysis, market insights, data-driven recommendations. Athena turns raw information into strategic advantage.</div>
+                        <div class="skills">
+                            <span class="skill-tag">Market Research</span>
+                            <span class="skill-tag">Data Analysis</span>
+                            <span class="skill-tag">Strategy</span>
+                            <span class="skill-tag">Competitive Intel</span>
+                            <span class="skill-tag">Reports</span>
+                        </div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-card-header">
+                            <div class="team-avatar hermes">🪽</div>
+                            <div class="info">
+                                <h3>Hermes</h3>
+                                <span>Communications & Logistics Agent</span>
+                            </div>
+                        </div>
+                        <div class="description">Emails, scheduling, coordination, outreach, follow-ups. Hermes keeps the lines of communication open and the logistics flowing.</div>
+                        <div class="skills">
+                            <span class="skill-tag">Email Drafting</span>
+                            <span class="skill-tag">Scheduling</span>
+                            <span class="skill-tag">Coordination</span>
+                            <span class="skill-tag">Outreach</span>
+                            <span class="skill-tag">Reminders</span>
+                        </div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-card-header">
+                            <div class="team-avatar vulcan">🔨</div>
+                            <div class="info">
+                                <h3>Vulcan</h3>
+                                <span>Engineering & Operations Agent</span>
+                            </div>
+                        </div>
+                        <div class="description">Code, builds, technical projects, automation, infrastructure. Vulcan forges the tools and systems that power the organization.</div>
+                        <div class="skills">
+                            <span class="skill-tag">Development</span>
+                            <span class="skill-tag">Automation</span>
+                            <span class="skill-tag">Infrastructure</span>
+                            <span class="skill-tag">Technical Ops</span>
+                            <span class="skill-tag">Debugging</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TASKS PAGE -->
+            <div class="page" id="page-tasks">
+                <div class="section-title"><span class="dot"></span> Task Management</div>
+                <div class="task-filters">
+                    <button class="filter-btn active" onclick="filterTasks('all', this)">All</button>
+                    <button class="filter-btn" onclick="filterTasks('open', this)">Open</button>
+                    <button class="filter-btn" onclick="filterTasks('completed', this)">Completed</button>
+                    <button class="filter-btn" onclick="filterTasks('high', this)">High Priority</button>
+                </div>
+                <div class="task-list" id="taskList"></div>
+                <div class="add-task-bar">
+                    <input type="text" id="newTaskInput" placeholder="Add a new task..." onkeydown="if(event.key==='Enter')addTask()">
+                    <select id="newTaskAssignee">
+                        <option value="Zeus">Zeus</option>
+                        <option value="Athena">Athena</option>
+                        <option value="Hermes">Hermes</option>
+                        <option value="Vulcan">Vulcan</option>
+                    </select>
+                    <select id="newTaskPriority">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                    <button class="add-task-btn" onclick="addTask()">+ Add</button>
+                </div>
+            </div>
+
+            <!-- DIRECT AGENT PAGE -->
+            <div class="page" id="page-direct">
+                <div class="section-title"><span class="dot"></span> Direct Agent Communication</div>
+                <div class="task-filters" style="margin-bottom:16px;">
+                    <button class="filter-btn active" onclick="selectAgent('Zeus', this)">⚡ Zeus</button>
+                    <button class="filter-btn" onclick="selectAgent('Athena', this)">🦉 Athena</button>
+                    <button class="filter-btn" onclick="selectAgent('Hermes', this)">🪽 Hermes</button>
+                    <button class="filter-btn" onclick="selectAgent('Vulcan', this)">🔨 Vulcan</button>
+                </div>
+                <div class="message-panel">
+                    <div class="messages-container" id="messagesContainer"></div>
+                    <div class="message-input-bar">
+                        <input type="text" id="messageInput" placeholder="Send a directive..." onkeydown="if(event.key==='Enter')sendMessage()">
+                        <button class="send-btn" onclick="sendMessage()">Send ⚡</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMMANDS PAGE -->
+            <div class="page" id="page-commands">
+                <div class="section-title"><span class="dot"></span> Quick Commands</div>
+                <div class="commands-grid">
+                    <div class="command-card" onclick="runCommand('status')">
+                        <div class="cmd-icon">📊</div>
+                        <div class="cmd-name">Status Report</div>
+                        <div class="cmd-desc">Get a full status report from all agents</div>
+                    </div>
+                    <div class="command-card" onclick="runCommand('standup')">
+                        <div class="cmd-icon">🗣️</div>
+                        <div class="cmd-name">Daily Standup</div>
+                        <div class="cmd-desc">Each agent reports what they're working on</div>
+                    </div>
+                    <div class="command-card" onclick="runCommand('priority')">
+                        <div class="cmd-icon">🔥</div>
+                        <div class="cmd-name">Priority Check</div>
+                        <div class="cmd-desc">Review all high-priority items</div>
+                    </div>
+                    <div class="command-card" onclick="runCommand('research')">
+                        <div class="cmd-icon">🔍</div>
+                        <div class="cmd-name">Research Task</div>
+                        <div class="cmd-desc">Assign research to Athena</div>
+                    </div>
+                    <div class="command-card" onclick="runCommand('outreach')">
+                        <div class="cmd-icon">📧</div>
+                        <div class="cmd-name">Draft Outreach</div>
+                        <div class="cmd-desc">Hermes drafts communications</div>
+                    </div>
+                    <div class="command-card" onclick="runCommand('build')">
+                        <div class="cmd-icon">🔨</div>
+                        <div class="cmd-name">Build Something</div>
+                        <div class="cmd-desc">Vulcan starts a build task</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVITY PAGE -->
+            <div class="page" id="page-activity">
+                <div class="section-title"><span class="dot"></span> Activity Log</div>
+                <div class="activity-feed" id="activityFeed"></div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script>
+// ═══════════ STATE ═══════════
+const state = {
+    tasks: [],
+    activities: [],
+    messages: {},
+    currentAgent: 'Zeus',
+    completedToday: 0,
+    taskIdCounter: 0
+};
+
+const AGENTS = {
+    Zeus: { emoji: '⚡', color: 'gold', role: 'COO' },
+    Athena: { emoji: '🦉', color: 'blue', role: 'Strategy' },
+    Hermes: { emoji: '🪽', color: 'green', role: 'Comms' },
+    Vulcan: { emoji: '🔨', color: 'purple', role: 'Engineering' }
+};
+
+// ═══════════ LOGIN ═══════════
+function handleLogin() {
+    const user = document.getElementById('loginUser').value;
+    const pass = document.getElementById('loginPass').value;
+    if (user === 'admin' && pass === 'olympus2025') {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('app').classList.add('active');
+        addActivity('gold', '<strong>Moses</strong> signed in to Olympus');
+        init();
+    } else {
+        document.getElementById('loginError').textContent = 'Invalid credentials. Try again.';
+    }
+}
+
+function handleLogout() {
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('app').classList.remove('active');
+}
+
+// ═══════════ NAVIGATION ═══════════
+function switchPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+    const titles = {
+        dashboard: 'Dashboard',
+        org: 'Organization',
+        team: 'Executive Team',
+        tasks: 'Task Management',
+        direct: 'Direct Agent',
+        commands: 'Quick Commands',
+        activity: 'Activity Log'
+    };
+    document.getElementById('pageTitle').textContent = titles[page] || page;
+}
+
+// ═══════════ TASKS ═══════════
+function addTask() {
+    const input = document.getElementById('newTaskInput');
+    const assignee = document.getElementById('newTaskAssignee').value;
+    const priority = document.getElementById('newTaskPriority').value;
+    const title = input.value.trim();
+    if (!title) return;
+
+    const task = {
+        id: ++state.taskIdCounter,
+        title,
+        assignee,
+        priority,
+        completed: false,
+        created: new Date()
+    };
+
+    state.tasks.unshift(task);
+    input.value = '';
+    renderTasks();
+    updateStats();
+    addActivity(AGENTS[assignee].color, `<strong>${assignee}</strong> assigned: "${title}"`);
+}
+
+function toggleTask(id) {
+    const task = state.tasks.find(t => t.id === id);
+    if (task) {
+        task.completed = !task.completed;
+        if (task.completed) {
+            state.completedToday++;
+            addActivity('green', `Task completed: "${task.title}" by <strong>${task.assignee}</strong>`);
+        }
+        renderTasks();
+        updateStats();
+    }
+}
+
+function filterTasks(filter, btn) {
+    document.querySelectorAll('.task-filters .filter-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderTasks(filter);
+}
+
+function renderTasks(filter = 'all') {
+    const list = document.getElementById('taskList');
+    const dashList = document.getElementById('dashboardTasks');
+    let filtered = state.tasks;
+
+    if (filter === 'open') filtered = filtered.filter(t => !t.completed);
+    if (filter === 'completed') filtered = filtered.filter(t => t.completed);
+    if (filter === 'high') filtered = filtered.filter(t => t.priority === 'high');
+
+    list.innerHTML = filtered.map(t => `
+        <div class="task-item ${t.completed ? 'completed' : ''}">
+            <div class="task-check ${t.completed ? 'done' : ''}" onclick="toggleTask(${t.id})"></div>
+            <div class="task-info">
+                <div class="task-title">${t.title}</div>
+                <div class="task-meta">
+                    <span class="task-priority priority-${t.priority}">${t.priority}</span>
+                    <span class="task-assignee">${AGENTS[t.assignee]?.emoji || ''} ${t.assignee}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    // Dashboard shows open + high priority
+    const dashFiltered = state.tasks.filter(t => !t.completed && t.priority === 'high').slice(0, 5);
+    dashList.innerHTML = dashFiltered.map(t => `
+        <div class="task-item">
+            <div class="task-check" onclick="toggleTask(${t.id})"></div>
+            <div class="task-info">
+                <div class="task-title">${t.title}</div>
+                <div class="task-meta">
+                    <span class="task-priority priority-${t.priority}">${t.priority}</span>
+                    <span class="task-assignee">${AGENTS[t.assignee]?.emoji || ''} ${t.assignee}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    document.getElementById('taskBadge').textContent = state.tasks.filter(t => !t.completed).length;
+}
+
+// ═══════════ ACTIVITY ═══════════
+function addActivity(color, text) {
+    const activity = { color, text, time: new Date() };
+    state.activities.unshift(activity);
+    renderActivities();
+}
+
+function renderActivities() {
+    const feed = document.getElementById('activityFeed');
+    const dashFeed = document.getElementById('dashboardActivity');
+
+    const html = state.activities.slice(0, 50).map(a => `
+        <div class="activity-item">
+            <div class="activity-dot ${a.color}"></div>
+            <div class="activity-content">
+                <div class="activity-text">${a.text}</div>
+                <div class="activity-time">${formatTime(a.time)}</div>
+            </div>
+        </div>
+    `).join('');
+
+    feed.innerHTML = html;
+    dashFeed.innerHTML = state.activities.slice(0, 6).map(a => `
+        <div class="activity-item">
+            <div class="activity-dot ${a.color}"></div>
+            <div class="activity-content">
+                <div class="activity-text">${a.text}</div>
+                <div class="activity-time">${formatTime(a.time)}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function formatTime(d) {
+    const now = new Date();
+    const diff = Math.floor((now - d) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    return d.toLocaleDateString();
+}
+
+// ═══════════ MESSAGES ═══════════
+function selectAgent(agent, btn) {
+    state.currentAgent = agent;
+    document.querySelectorAll('#page-direct .filter-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderMessages();
+}
+
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    if (!state.messages[state.currentAgent]) state.messages[state.currentAgent] = [];
+    state.messages[state.currentAgent].push({ from: 'Moses', text, time: new Date() });
+
+    input.value = '';
+    renderMessages();
+
+    // Simulate agent response
+    setTimeout(() => {
+        const responses = getAgentResponse(state.currentAgent, text);
+        state.messages[state.currentAgent].push({ from: state.currentAgent, text: responses, time: new Date() });
+        renderMessages();
+        addActivity(AGENTS[state.currentAgent].color, `<strong>${state.currentAgent}</strong> responded to Moses`);
+    }, 800 + Math.random() * 1200);
+}
+
+function getAgentResponse(agent, msg) {
+    const responses = {
+        Zeus: [
+            "⚡ Copy that. I'll coordinate with the team and have an update within the hour.",
+            "⚡ Acknowledged. Dispatching to the appropriate agent now.",
+            "⚡ On it, Moses. I'll ensure this gets prioritized.",
+            "⚡ Understood. Let me pull the latest status from the team.",
+            "⚡ Roger that. This is now top priority."
+        ],
+        Athena: [
+            "🦉 Interesting directive. Let me analyze the landscape and get back to you with data.",
+            "🦉 I'll research this thoroughly and prepare a strategic brief.",
+            "🦉 Acknowledged. Running analysis now — expect insights shortly.",
+            "🦉 Good call. I see several angles worth exploring here.",
+            "🦉 On it. I'll compile findings and present options."
+        ],
+        Hermes: [
+            "🪽 Got it! I'll draft communications and coordinate logistics.",
+            "🪽 On it — I'll handle the outreach and keep everyone in the loop.",
+            "🪽 Consider it done. I'll schedule and follow up accordingly.",
+            "🪽 Absolutely. Let me get the wheels turning on this.",
+            "🪽 Message received. I'll draft something and have it ready for your review."
+        ],
+        Vulcan: [
+            "🔨 Building it now. I'll have a working version ready soon.",
+            "🔨 Acknowledged. Technical specs are clear — deploying now.",
+            "🔨 On it. This is right in my wheelhouse.",
+            "🔨 Consider it forged. Working on implementation.",
+            "🔨 Got it. I'll architect the solution and report back."
+        ]
+    };
+    const pool = responses[agent] || responses.Zeus;
+    return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function renderMessages() {
+    const container = document.getElementById('messagesContainer');
+    const msgs = state.messages[state.currentAgent] || [];
+    container.innerHTML = msgs.map(m => `
+        <div class="message-bubble ${m.from === 'Moses' ? 'from-user' : 'from-agent'}">
+            ${m.from !== 'Moses' ? `<div class="msg-sender">${AGENTS[m.from]?.emoji || ''} ${m.from}</div>` : ''}
+            ${m.text}
+            <div class="msg-time">${formatTime(m.time)}</div>
+        </div>
+    `).join('');
+    container.scrollTop = container.scrollHeight;
+}
+
+// ═══════════ COMMANDS ═══════════
+function runCommand(cmd) {
+    const actions = {
+        status: () => {
+            addActivity('gold', '<strong>Moses</strong> requested Status Report');
+            addActivity('blue', '<strong>Zeus</strong>: All 3 agents online. 0 critical issues. Systems nominal.');
+            addActivity('blue', '<strong>Athena</strong>: No pending research tasks.');
+            addActivity('green', '<strong>Hermes</strong>: No pending communications.');
+            addActivity('purple', '<strong>Vulcan</strong>: Infrastructure stable. All builds passing.');
+        },
+        standup: () => {
+            addActivity('gold', '<strong>Moses</strong> initiated Daily Standup');
+            addActivity('blue', '<strong>Zeus</strong>: Coordinating operations. Standing by for directives.');
+            addActivity('blue', '<strong>Athena</strong>: Monitoring market trends. Ready for analysis tasks.');
+            addActivity('green', '<strong>Hermes</strong>: Calendar clear. Ready for outreach.');
+            addActivity('purple', '<strong>Vulcan</strong>: Dev environment hot. Ready to build.');
+        },
+        priority: () => {
+            addActivity('gold', '<strong>Moses</strong> ran Priority Check');
+            const high = state.tasks.filter(t => !t.completed && t.priority === 'high');
+            addActivity('blue', high.length ? `${high.length} high-priority tasks pending` : 'No high-priority items. Clear skies.');
+        },
+        research: () => {
+            const topic = prompt('What should Athena research?');
+            if (topic) {
+                state.tasks.unshift({ id: ++state.taskIdCounter, title: `Research: ${topic}`, assignee: 'Athena', priority: 'high', completed: false, created: new Date() });
+                renderTasks(); updateStats();
+                addActivity('gold', `<strong>Moses</strong> assigned research to <strong>Athena</strong>: "${topic}"`);
+                addActivity('blue', '<strong>Athena</strong>: Accepted. Beginning analysis.');
+            }
+        },
+        outreach: () => {
+            const target = prompt('Who should Hermes reach out to?');
+            if (target) {
+                state.tasks.unshift({ id: ++state.taskIdCounter, title: `Draft outreach to: ${target}`, assignee: 'Hermes', priority: 'medium', completed: false, created: new Date() });
+                renderTasks(); updateStats();
+                addActivity('gold', `<strong>Moses</strong> tasked <strong>Hermes</strong> with outreach to "${target}"`);
+                addActivity('green', '<strong>Hermes</strong>: On it. Drafting now.');
+            }
+        },
+        build: () => {
+            const project = prompt('What should Vulcan build?');
+            if (project) {
+                state.tasks.unshift({ id: ++state.taskIdCounter, title: `Build: ${project}`, assignee: 'Vulcan', priority: 'high', completed: false, created: new Date() });
+                renderTasks(); updateStats();
+                addActivity('gold', `<strong>Moses</strong> tasked <strong>Vulcan</strong>: "${project}"`);
+                addActivity('purple', '<strong>Vulcan</strong>: Forging. ETA incoming.');
+            }
+        }
+    };
+    if (actions[cmd]) actions[cmd]();
+    switchPage('activity');
+}
+
+// ═══════════ STATS ═══════════
+function updateStats() {
+    document.getElementById('statOpenTasks').textContent = state.tasks.filter(t => !t.completed).length;
+    document.getElementById('statCompleted').textContent = state.completedToday;
+}
+
+// ═══════════ INIT ═══════════
+function init() {
+    // Seed some starter tasks
+    state.tasks = [
+        { id: ++state.taskIdCounter, title: 'Set up daily briefing schedule', assignee: 'Zeus', priority: 'high', completed: false, created: new Date() },
+        { id: ++state.taskIdCounter, title: 'Research competitor landscape', assignee: 'Athena', priority: 'medium', completed: false, created: new Date() },
+        { id: ++state.taskIdCounter, title: 'Draft welcome email template', assignee: 'Hermes', priority: 'low', completed: false, created: new Date() },
+        { id: ++state.taskIdCounter, title: 'Configure monitoring dashboard', assignee: 'Vulcan', priority: 'medium', completed: false, created: new Date() },
+    ];
+
+    state.activities = [
+        { color: 'gold', text: '<strong>Olympus</strong> system initialized', time: new Date() },
+        { color: 'gold', text: '<strong>Moses</strong> — CEO onboarded', time: new Date() },
+        { color: 'blue', text: '<strong>Zeus</strong> — COO online and operational', time: new Date() },
+        { color: 'blue', text: '<strong>Athena</strong> — Strategy agent deployed', time: new Date() },
+        { color: 'green', text: '<strong>Hermes</strong> — Comms agent deployed', time: new Date() },
+        { color: 'purple', text: '<strong>Vulcan</strong> — Engineering agent deployed', time: new Date() },
+    ];
+
+    Object.keys(AGENTS).forEach(a => { state.messages[a] = []; });
+
+    renderTasks();
+    renderActivities();
+    updateStats();
+
+    // Simulate periodic agent activity
+    setInterval(() => {
+        const agents = ['Zeus', 'Athena', 'Hermes', 'Vulcan'];
+        const agent = agents[Math.floor(Math.random() * agents.length)];
+        const idle = ['Monitoring systems...', 'Scanning for updates...', 'Standing by...', 'Reviewing queue...', 'Running diagnostics...'];
+        // Light background activity (no spam)
+    }, 60000);
+}
+
+// Enter key on login
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
+</script>
+
+</body>
+</html>
