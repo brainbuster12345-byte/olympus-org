@@ -1,1738 +1,675 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OLYMPUS — AI Command Center</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-card: #1a1a2e;
-            --bg-card-hover: #1f1f35;
-            --bg-input: #16162a;
-            --accent-gold: #d4a843;
-            --accent-gold-dim: rgba(212, 168, 67, 0.15);
-            --accent-blue: #4a9eff;
-            --accent-purple: #8b5cf6;
-            --accent-green: #22c55e;
-            --accent-red: #ef4444;
-            --accent-orange: #f59e0b;
-            --text-primary: #e8e8f0;
-            --text-secondary: #8888a8;
-            --text-dim: #555570;
-            --border: #2a2a45;
-            --border-light: #33335a;
-            --glow-gold: 0 0 30px rgba(212, 168, 67, 0.2);
-            --glow-blue: 0 0 20px rgba(74, 158, 255, 0.15);
-            --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* ═══════════ LOGIN SCREEN ═══════════ */
-        .login-screen {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            background: var(--bg-primary);
-            transition: opacity 0.6s, visibility 0.6s;
-        }
-
-        .login-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .login-bg-grid {
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(212, 168, 67, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(212, 168, 67, 0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
-            animation: gridPulse 8s ease-in-out infinite;
-        }
-
-        @keyframes gridPulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-
-        .login-container {
-            position: relative;
-            width: 420px;
-            max-width: 90vw;
-            padding: 48px 40px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .login-logo {
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 8px;
-            text-transform: uppercase;
-            color: var(--accent-gold);
-            margin-bottom: 8px;
-        }
-
-        .login-title {
-            font-size: 32px;
-            font-weight: 800;
-            margin-bottom: 6px;
-            background: linear-gradient(135deg, var(--accent-gold), #f0d078);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .login-subtitle {
-            font-size: 13px;
-            color: var(--text-dim);
-            margin-bottom: 36px;
-            letter-spacing: 1px;
-        }
-
-        .login-field {
-            margin-bottom: 16px;
-            text-align: left;
-        }
-
-        .login-field label {
-            display: block;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .login-field input {
-            width: 100%;
-            padding: 14px 16px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-size: 15px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        .login-field input:focus {
-            border-color: var(--accent-gold);
-            box-shadow: 0 0 0 3px var(--accent-gold-dim);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            margin-top: 8px;
-            background: linear-gradient(135deg, var(--accent-gold), #c49530);
-            border: none;
-            border-radius: 10px;
-            color: #0a0a0f;
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.3s;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--glow-gold);
-        }
-
-        .login-error {
-            color: var(--accent-red);
-            font-size: 13px;
-            margin-top: 12px;
-            min-height: 20px;
-        }
-
-        .login-hint {
-            font-size: 11px;
-            color: var(--text-dim);
-            margin-top: 20px;
-        }
-
-        /* ═══════════ MAIN APP ═══════════ */
-        .app {
-            display: none;
-            min-height: 100vh;
-        }
-
-        .app.active { display: flex; }
-
-        /* ═══════════ SIDEBAR ═══════════ */
-        .sidebar {
-            width: 260px;
-            min-height: 100vh;
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            z-index: 100;
-        }
-
-        .sidebar-brand {
-            padding: 24px 20px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .sidebar-brand h1 {
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 6px;
-            text-transform: uppercase;
-            color: var(--accent-gold);
-        }
-
-        .sidebar-brand span {
-            font-size: 10px;
-            color: var(--text-dim);
-            letter-spacing: 2px;
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            padding: 16px 12px;
-        }
-
-        .nav-section-label {
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--text-dim);
-            padding: 12px 12px 8px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 2px;
-        }
-
-        .nav-item:hover {
-            background: var(--bg-card);
-            color: var(--text-primary);
-        }
-
-        .nav-item.active {
-            background: var(--accent-gold-dim);
-            color: var(--accent-gold);
-        }
-
-        .nav-item .icon {
-            width: 20px;
-            text-align: center;
-            font-size: 14px;
-        }
-
-        .nav-item .badge {
-            margin-left: auto;
-            background: var(--accent-gold);
-            color: #0a0a0f;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 10px;
-        }
-
-        .sidebar-footer {
-            padding: 16px 20px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sidebar-footer .avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-gold), #f0d078);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 700;
-            color: #0a0a0f;
-        }
-
-        .sidebar-footer .user-info {
-            flex: 1;
-        }
-
-        .sidebar-footer .user-name {
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .sidebar-footer .user-role {
-            font-size: 10px;
-            color: var(--text-dim);
-        }
-
-        .logout-btn {
-            background: none;
-            border: none;
-            color: var(--text-dim);
-            cursor: pointer;
-            font-size: 14px;
-            padding: 4px;
-            border-radius: 4px;
-            transition: color 0.2s;
-        }
-
-        .logout-btn:hover { color: var(--accent-red); }
-
-        /* ═══════════ MAIN CONTENT ═══════════ */
-        .main {
-            flex: 1;
-            margin-left: 260px;
-            min-height: 100vh;
-        }
-
-        .topbar {
-            padding: 20px 32px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg-secondary);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            backdrop-filter: blur(20px);
-        }
-
-        .topbar h2 {
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .topbar-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--accent-green);
-            letter-spacing: 1px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--accent-green);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-            50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-        }
-
-        .content {
-            padding: 32px;
-        }
-
-        /* ═══════════ DASHBOARD ═══════════ */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            transition: transform 0.2s, border-color 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--border-light);
-        }
-
-        .stat-card .stat-label {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: var(--text-dim);
-            margin-bottom: 8px;
-        }
-
-        .stat-card .stat-value {
-            font-size: 28px;
-            font-weight: 800;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .stat-card .stat-change {
-            font-size: 11px;
-            font-weight: 600;
-            margin-top: 4px;
-        }
-
-        .stat-change.up { color: var(--accent-green); }
-        .stat-change.down { color: var(--accent-red); }
-
-        /* ═══════════ ORG CHART ═══════════ */
-        .org-chart {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 24px;
-            padding: 40px 0;
-        }
-
-        .org-node {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px 32px;
-            text-align: center;
-            min-width: 280px;
-            position: relative;
-            transition: all 0.3s;
-        }
-
-        .org-node:hover {
-            border-color: var(--accent-gold);
-            box-shadow: var(--glow-gold);
-        }
-
-        .org-node.ceo {
-            border-color: var(--accent-gold);
-            background: linear-gradient(135deg, rgba(212, 168, 67, 0.1), var(--bg-card));
-        }
-
-        .org-node.exec {
-            border-color: var(--accent-blue);
-            min-width: 220px;
-        }
-
-        .org-node.agent {
-            border-color: var(--border);
-            min-width: 200px;
-        }
-
-        .org-node .role-badge {
-            display: inline-block;
-            font-size: 9px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            padding: 3px 10px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-
-        .role-badge.ceo-badge { background: var(--accent-gold-dim); color: var(--accent-gold); }
-        .role-badge.exec-badge { background: rgba(74, 158, 255, 0.15); color: var(--accent-blue); }
-        .role-badge.agent-badge { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
-
-        .org-node .name {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .org-node .title {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .org-node .status {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 10px;
-            font-weight: 600;
-            margin-top: 10px;
-            padding: 3px 10px;
-            border-radius: 20px;
-        }
-
-        .status.online { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); }
-        .status.idle { background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); }
-
-        .org-connector {
-            width: 2px;
-            height: 30px;
-            background: var(--border-light);
-        }
-
-        .org-row {
-            display: flex;
-            gap: 24px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .org-branch {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .org-horizontal-line {
-            height: 2px;
-            background: var(--border-light);
-            width: 100%;
-            max-width: 700px;
-            position: relative;
-        }
-
-        .org-horizontal-line::before,
-        .org-horizontal-line::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--border-light);
-            transform: translateY(-50%);
-        }
-
-        .org-horizontal-line::before { left: 0; }
-        .org-horizontal-line::after { right: 0; }
-
-        /* ═══════════ TEAM CARDS ═══════════ */
-        .team-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 20px;
-        }
-
-        .team-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px;
-            transition: all 0.3s;
-        }
-
-        .team-card:hover {
-            border-color: var(--border-light);
-            transform: translateY(-2px);
-        }
-
-        .team-card-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .team-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            font-weight: 800;
-        }
-
-        .team-avatar.zeus { background: linear-gradient(135deg, #d4a843, #f0d078); color: #0a0a0f; }
-        .team-avatar.athena { background: linear-gradient(135deg, #4a9eff, #7ab8ff); color: #0a0a0f; }
-        .team-avatar.hermes { background: linear-gradient(135deg, #22c55e, #4ade80); color: #0a0a0f; }
-        .team-avatar.vulcan { background: linear-gradient(135deg, #ef4444, #f87171); color: #0a0a0f; }
-
-        .team-card-header .info h3 {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .team-card-header .info span {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .team-card .description {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 16px;
-        }
-
-        .team-card .skills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .skill-tag {
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            background: var(--bg-input);
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-        }
-
-        /* ═══════════ TASKS ═══════════ */
-        .task-filters {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 6px 14px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: transparent;
-            color: var(--text-secondary);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .filter-btn:hover, .filter-btn.active {
-            background: var(--accent-gold-dim);
-            color: var(--accent-gold);
-            border-color: var(--accent-gold);
-        }
-
-        .task-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .task-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .task-item:hover {
-            border-color: var(--border-light);
-            background: var(--bg-card-hover);
-        }
-
-        .task-check {
-            width: 20px;
-            height: 20px;
-            border-radius: 6px;
-            border: 2px solid var(--border-light);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-
-        .task-check.done {
-            background: var(--accent-green);
-            border-color: var(--accent-green);
-        }
-
-        .task-check.done::after {
-            content: '✓';
-            color: #fff;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .task-info { flex: 1; }
-
-        .task-info .task-title {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-
-        .task-item.completed .task-title {
-            text-decoration: line-through;
-            color: var(--text-dim);
-        }
-
-        .task-meta {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .task-meta span {
-            font-size: 11px;
-            color: var(--text-dim);
-        }
-
-        .task-priority {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-
-        .priority-high { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
-        .priority-medium { background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); }
-        .priority-low { background: rgba(34, 197, 94, 0.15); color: var(--accent-green); }
-
-        .task-assignee {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--accent-blue);
-        }
-
-        .add-task-bar {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
-        }
-
-        .add-task-bar input {
-            flex: 1;
-            padding: 12px 16px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-size: 13px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .add-task-bar input:focus {
-            border-color: var(--accent-gold);
-        }
-
-        .add-task-bar select {
-            padding: 12px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-size: 13px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            cursor: pointer;
-        }
-
-        .add-task-btn {
-            padding: 12px 20px;
-            background: var(--accent-gold);
-            border: none;
-            border-radius: 10px;
-            color: #0a0a0f;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .add-task-btn:hover { transform: translateY(-1px); }
-
-        /* ═══════════ ACTIVITY LOG ═══════════ */
-        .activity-feed {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-        }
-
-        .activity-item {
-            display: flex;
-            gap: 16px;
-            padding: 16px 0;
-            border-bottom: 1px solid var(--border);
-            position: relative;
-        }
-
-        .activity-item::before {
-            content: '';
-            position: absolute;
-            left: 17px;
-            top: 40px;
-            bottom: -1px;
-            width: 1px;
-            background: var(--border);
-        }
-
-        .activity-item:last-child::before { display: none; }
-
-        .activity-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-top: 5px;
-            flex-shrink: 0;
-            z-index: 1;
-        }
-
-        .activity-dot.gold { background: var(--accent-gold); }
-        .activity-dot.blue { background: var(--accent-blue); }
-        .activity-dot.green { background: var(--accent-green); }
-        .activity-dot.purple { background: var(--accent-purple); }
-
-        .activity-content .activity-text {
-            font-size: 13px;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-
-        .activity-content .activity-text strong {
-            color: var(--accent-gold);
-        }
-
-        .activity-content .activity-time {
-            font-size: 11px;
-            color: var(--text-dim);
-        }
-
-        /* ═══════════ MESSAGES / DIRECTOR ═══════════ */
-        .message-panel {
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 140px);
-        }
-
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .message-bubble {
-            max-width: 70%;
-            padding: 14px 18px;
-            border-radius: 16px;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .message-bubble.from-user {
-            align-self: flex-end;
-            background: var(--accent-gold-dim);
-            border: 1px solid rgba(212, 168, 67, 0.3);
-            border-bottom-right-radius: 4px;
-        }
-
-        .message-bubble.from-agent {
-            align-self: flex-start;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-bottom-left-radius: 4px;
-        }
-
-        .message-bubble .msg-sender {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-            color: var(--accent-blue);
-        }
-
-        .message-bubble .msg-time {
-            font-size: 10px;
-            color: var(--text-dim);
-            margin-top: 6px;
-        }
-
-        .message-input-bar {
-            display: flex;
-            gap: 10px;
-            padding: 16px 0;
-            border-top: 1px solid var(--border);
-        }
-
-        .message-input-bar input {
-            flex: 1;
-            padding: 14px 18px;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            color: var(--text-primary);
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .message-input-bar input:focus {
-            border-color: var(--accent-gold);
-        }
-
-        .send-btn {
-            padding: 14px 24px;
-            background: var(--accent-gold);
-            border: none;
-            border-radius: 12px;
-            color: #0a0a0f;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .send-btn:hover { transform: translateY(-1px); }
-
-        /* ═══════════ SECTION PAGES ═══════════ */
-        .page { display: none; }
-        .page.active { display: block; }
-
-        .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .section-title .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--accent-gold);
-        }
-
-        /* ═══════════ COMMANDS PANEL ═══════════ */
-        .commands-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 12px;
-        }
-
-        .command-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .command-card:hover {
-            border-color: var(--accent-gold);
-            transform: translateY(-2px);
-        }
-
-        .command-card .cmd-icon {
-            font-size: 24px;
-            margin-bottom: 12px;
-        }
-
-        .command-card .cmd-name {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .command-card .cmd-desc {
-            font-size: 12px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-
-        /* ═══════════ SCROLLBAR ═══════════ */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
-
-        /* ═══════════ RESPONSIVE ═══════════ */
-        @media (max-width: 768px) {
-            .sidebar { width: 60px; }
-            .sidebar .nav-item span,
-            .sidebar .nav-section-label,
-            .sidebar-brand h1,
-            .sidebar-brand span,
-            .sidebar-footer .user-info,
-            .logout-btn { display: none; }
-            .sidebar-brand { padding: 16px; text-align: center; }
-            .sidebar-brand::after { content: '⚡'; font-size: 20px; }
-            .main { margin-left: 60px; }
-            .stats-row { grid-template-columns: repeat(2, 1fr); }
-            .org-row { flex-direction: column; align-items: center; }
-        }
-
-        /* ═══════════ ANIMATIONS ═══════════ */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .fade-in { animation: fadeIn 0.4s ease-out; }
-
-        .two-col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-        }
-
-        @media (max-width: 900px) {
-            .two-col { grid-template-columns: 1fr; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OLYMPUS — AI Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#06060c;--bg2:#0d0d18;--card:rgba(18,18,35,0.7);--gold:#d4a843;--gold-dim:rgba(212,168,67,0.12);--blue:#4a9eff;--green:#22c55e;--red:#ef4444;--orange:#f59e0b;--purple:#8b5cf6;--text:#e8e8f0;--text2:#8888a8;--dim:#555570;--border:rgba(255,255,255,0.06);--glass:rgba(255,255,255,0.03)}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+canvas#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* LOGIN */
+.login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;background:var(--bg);transition:.5s}
+.login.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.login-box{position:relative;width:380px;max-width:90vw;padding:48px 36px;background:var(--card);backdrop-filter:blur(30px);border:1px solid var(--border);border-radius:24px;text-align:center}
+.login-logo{font-size:48px;margin-bottom:12px;filter:drop-shadow(0 0 20px rgba(212,168,67,0.4))}
+.login-title{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;background:linear-gradient(135deg,var(--gold),#f5e6b8,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.login-sub{font-size:11px;color:var(--dim);letter-spacing:4px;text-transform:uppercase;margin-bottom:32px}
+.login-field{margin-bottom:14px;text-align:left}
+.login-field label{display:block;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:6px}
+.login-field input{width:100%;padding:13px 16px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:.3s}
+.login-field input:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}
+.login-btn{width:100%;padding:14px;margin-top:8px;background:linear-gradient(135deg,var(--gold),#b8922e);border:none;border-radius:12px;color:#0a0a0f;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(212,168,67,0.3)}
+.login-err{color:var(--red);font-size:12px;margin-top:10px;min-height:18px}
+.login-hint{font-size:10px;color:var(--dim);margin-top:16px}
+
+/* APP */
+.app{display:none;min-height:100vh;position:relative;z-index:1}
+.app.on{display:flex}
+
+/* SIDEBAR */
+.side{width:240px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;transition:width .3s}
+.side-brand{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.side-brand .bolt{font-size:24px;filter:drop-shadow(0 0 8px rgba(212,168,67,0.5))}
+.side-brand h1{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;background:linear-gradient(135deg,var(--gold),#f0d078);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px}
+.nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-label{font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--dim);padding:14px 12px 6px}
+.nav-i{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;color:var(--text2);font-size:12px;font-weight:500;margin-bottom:2px;transition:.2s;position:relative}
+.nav-i:hover{background:var(--glass);color:var(--text)}
+.nav-i.on{background:var(--gold-dim);color:var(--gold)}
+.nav-i .icon{width:18px;text-align:center;font-size:14px}
+.nav-i .badge{margin-left:auto;background:var(--gold);color:#0a0a0f;font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;min-width:16px;text-align:center}
+.side-foot{padding:14px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.side-foot .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#f0d078);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#0a0a0f}
+.side-foot .un{font-size:11px;font-weight:600}
+.side-foot .ur{font-size:9px;color:var(--dim)}
+.side-foot .logout{margin-left:auto;background:none;border:none;color:var(--dim);cursor:pointer;font-size:13px;padding:4px}
+.side-foot .logout:hover{color:var(--red)}
+
+/* MAIN */
+.main{flex:1;margin-left:240px;min-height:100vh}
+.top{padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(6,6,12,0.8);backdrop-filter:blur(20px);position:sticky;top:0;z-index:50}
+.top h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:800}
+.top-right{display:flex;align-items:center;gap:16px}
+.status-dot{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--green);letter-spacing:1px}
+.dot-pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+.content{padding:24px 28px}
+.page{display:none;animation:fadeUp .3s ease}
+.page.on{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:18px;transition:.2s}
+.stat:hover{transform:translateY(-2px);border-color:rgba(212,168,67,0.2)}
+.stat .sl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.stat .sv{font-size:28px;font-weight:900;font-family:'Inter',monospace}
+.stat .sc{font-size:10px;font-weight:600;margin-top:2px;color:var(--green)}
+
+/* AGENT CARDS */
+.agent-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.ag-card{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:20px;text-align:center;transition:.3s;cursor:pointer;position:relative;overflow:hidden}
+.ag-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0}
+.ag-card.z::before{background:linear-gradient(90deg,var(--gold),#f0d078)}
+.ag-card.a::before{background:linear-gradient(90deg,var(--blue),#7ab8ff)}
+.ag-card.h::before{background:linear-gradient(90deg,var(--green),#4ade80)}
+.ag-card.v::before{background:linear-gradient(90deg,var(--purple),#a78bfa)}
+.ag-card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,0.12);box-shadow:0 12px 40px rgba(0,0,0,0.3)}
+.ag-emoji{font-size:32px;margin-bottom:8px}
+.ag-name{font-size:15px;font-weight:800;margin-bottom:2px}
+.ag-role{font-size:11px;color:var(--text2)}
+.ag-status{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;margin-top:8px;padding:3px 10px;border-radius:20px;background:rgba(34,197,94,0.12);color:var(--green)}
+.ag-status .mini{width:5px;height:5px;border-radius:50%;background:var(--green)}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.two-col{grid-template-columns:1fr}}
+
+/* SECTION TITLE */
+.sec-t{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.sec-t .dot{width:7px;height:7px;border-radius:50%;background:var(--gold)}
+
+/* CHAT */
+.chat-page{display:flex;flex-direction:column;height:calc(100vh - 130px)}
+.chat-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.chat-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif}
+.chat-tab:hover,.chat-tab.on{background:var(--gold-dim);color:var(--gold);border-color:var(--gold)}
+.chat-box{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:75%;padding:12px 16px;border-radius:16px;font-size:13px;line-height:1.6;animation:fadeUp .3s ease}
+.msg.user{align-self:flex-end;background:var(--gold-dim);border:1px solid rgba(212,168,67,0.2);border-bottom-right-radius:4px}
+.msg.bot{align-self:flex-start;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--border);border-bottom-left-radius:4px}
+.msg .sender{font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.msg .sender.z{color:var(--gold)}.msg .sender.a{color:var(--blue)}.msg .sender.h{color:var(--green)}.msg .sender.v{color:var(--purple)}
+.msg .time{font-size:9px;color:var(--dim);margin-top:6px}
+.typing{font-size:11px;color:var(--dim);padding:4px 0;font-style:italic;min-height:20px}
+.chat-bar{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+.chat-bar input{flex:1;padding:12px 16px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:.3s}
+.chat-bar input:focus{border-color:var(--gold)}
+.chat-send{padding:12px 20px;background:linear-gradient(135deg,var(--gold),#b8922e);border:none;border-radius:12px;color:#0a0a0f;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif}
+.chat-send:hover{transform:translateY(-1px)}
+
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:768px){.kanban{grid-template-columns:1fr}}
+.kan-col{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:16px;min-height:300px}
+.kan-col .kan-h{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.kan-col .kan-h .cnt{font-size:10px;background:var(--gold-dim);color:var(--gold);padding:2px 8px;border-radius:8px}
+.kan-card{background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;transition:.2s}
+.kan-card:hover{border-color:var(--gold);transform:translateX(2px)}
+.kan-card .kt{font-size:12px;font-weight:600;margin-bottom:6px}
+.kan-card .km{display:flex;gap:6px;align-items:center}
+.kan-card .km span{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px}
+.pri-h{background:rgba(239,68,68,0.15);color:var(--red)}.pri-m{background:rgba(245,158,11,0.15);color:var(--orange)}.pri-l{background:rgba(34,197,94,0.15);color:var(--green)}
+.add-task-btn{width:100%;padding:10px;background:transparent;border:1px dashed var(--border);border-radius:10px;color:var(--dim);font-size:11px;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif;margin-top:8px}
+.add-task-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* COMMANDS */
+.cmd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.cmd{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:20px;cursor:pointer;transition:.3s;text-align:center}
+.cmd:hover{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.3)}
+.cmd .ci{font-size:28px;margin-bottom:10px}
+.cmd .cn{font-size:13px;font-weight:700;margin-bottom:4px}
+.cmd .cd{font-size:11px;color:var(--text2);line-height:1.4}
+
+/* AGENT PROFILES */
+.prof-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:768px){.prof-grid{grid-template-columns:1fr}}
+.prof{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:20px;padding:28px;position:relative;overflow:hidden;transition:.3s}
+.prof:hover{border-color:rgba(255,255,255,0.12)}
+.prof::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+.prof.z::before{background:linear-gradient(90deg,var(--gold),#f0d078)}
+.prof.a::before{background:linear-gradient(90deg,var(--blue),#7ab8ff)}
+.prof.h::before{background:linear-gradient(90deg,var(--green),#4ade80)}
+.prof.v::before{background:linear-gradient(90deg,var(--purple),#a78bfa)}
+.prof-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.prof-emoji{font-size:40px}
+.prof-info h3{font-size:18px;font-weight:800}
+.prof-info span{font-size:11px;color:var(--text2)}
+.prof-desc{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:14px}
+.prof-skills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.prof-skills span{font-size:9px;font-weight:700;padding:3px 9px;border-radius:6px;background:var(--glass);color:var(--text2);border:1px solid var(--border)}
+.prof-dm{padding:8px 16px;background:var(--gold-dim);border:1px solid rgba(212,168,67,0.2);border-radius:8px;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif}
+.prof-dm:hover{background:rgba(212,168,67,0.2)}
+
+/* CALC */
+.calc-wrap{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:700px}
+.calc-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.calc-field label{display:block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.calc-field input{width:100%;padding:10px 14px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;font-weight:700;font-family:'Inter',monospace;outline:none}
+.calc-field input:focus{border-color:var(--gold)}
+.ret-btns{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.ret-btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif}
+.ret-btn:hover,.ret-btn.on{background:var(--gold-dim);color:var(--gold);border-color:var(--gold)}
+.slider-wrap{margin-bottom:16px}
+.slider-wrap label{display:block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.slider-wrap input[type=range]{width:100%;-webkit-appearance:none;height:6px;border-radius:3px;background:var(--border);outline:none}
+.slider-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);cursor:pointer;box-shadow:0 0 10px rgba(212,168,67,0.4)}
+.yr-display{font-size:24px;font-weight:900;color:var(--gold);text-align:center;margin-bottom:16px}
+.results{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.res-card{background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+.res-card .rl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.res-card .rv{font-size:20px;font-weight:900;font-family:'Inter',monospace}
+.res-card.gold .rv{color:var(--gold)}.res-card.green .rv{color:var(--green)}.res-card.blue .rv{color:var(--blue)}
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:120px;padding:0 8px;margin-bottom:8px}
+.bar{flex:1;background:linear-gradient(to top,rgba(212,168,67,0.3),var(--gold));border-radius:4px 4px 0 0;transition:.3s;min-width:8px;position:relative}
+.bar:hover{opacity:.8}
+.bar .tip{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);padding:4px 8px;border-radius:6px;font-size:9px;font-weight:700;white-space:nowrap;color:var(--gold)}
+.bar:hover .tip{display:block}
+
+/* SETTINGS */
+.set-group{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:14px}
+.set-group h3{font-size:13px;font-weight:700;margin-bottom:12px}
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.set-row:last-child{border:none}
+.set-row .set-label{font-size:12px;font-weight:500}
+.set-row .set-desc{font-size:10px;color:var(--dim)}
+.toggle{width:40px;height:22px;border-radius:11px;background:var(--border);cursor:pointer;position:relative;transition:.3s}
+.toggle.on{background:var(--gold)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.3s}
+.toggle.on::after{left:21px}
+.theme-btns{display:flex;gap:8px}
+.theme-btn{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);cursor:pointer;transition:.2s}
+.theme-btn:hover,.theme-btn.on{border-color:var(--gold);transform:scale(1.1)}
+.theme-btn.gold{background:linear-gradient(135deg,#d4a843,#f0d078)}
+.theme-btn.blue{background:linear-gradient(135deg,#4a9eff,#7ab8ff)}
+.theme-btn.purple{background:linear-gradient(135deg,#8b5cf6,#a78bfa)}
+
+/* ACTIVITY */
+.act-feed{display:flex;flex-direction:column}
+.act-i{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.act-i:last-child{border:none}
+.act-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.act-dot.gold{background:var(--gold)}.act-dot.blue{background:var(--blue)}.act-dot.green{background:var(--green)}.act-dot.purple{background:var(--purple)}
+.act-text{font-size:12px;color:var(--text);margin-bottom:2px}
+.act-text strong{color:var(--gold)}
+.act-time{font-size:10px;color:var(--dim)}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-bg.on{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px;width:400px;max-width:90vw}
+.modal h3{font-size:16px;font-weight:800;margin-bottom:16px}
+.modal input,.modal select{width:100%;padding:10px 14px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;margin-bottom:10px}
+.modal input:focus{border-color:var(--gold)}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.modal-btns button{padding:8px 18px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s}
+.btn-cancel{background:var(--glass);color:var(--text2);border:1px solid var(--border)!important}
+.btn-save{background:var(--gold);color:#0a0a0f}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+.side{width:56px}.side .nav-i span,.side .nav-label,.side-brand h1,.side-foot .un,.side-foot .ur,.side-foot .logout{display:none}
+.side-brand{padding:14px;justify-content:center}.main{margin-left:56px}.stats{grid-template-columns:repeat(2,1fr)}
+.agent-row{grid-template-columns:repeat(2,1fr)}.prof-grid{grid-template-columns:1fr}
+.kanban{grid-template-columns:1fr}.results{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
+<canvas id="particles"></canvas>
 
-<!-- ═══════════ LOGIN ═══════════ -->
-<div class="login-screen" id="loginScreen">
-    <div class="login-bg-grid"></div>
-    <div class="login-container fade-in">
-        <div class="login-logo">⚡</div>
-        <div class="login-title">OLYMPUS</div>
-        <div class="login-subtitle">AI Command Center</div>
-        <div class="login-field">
-            <label>Username</label>
-            <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off">
-        </div>
-        <div class="login-field">
-            <label>Password</label>
-            <input type="password" id="loginPass" placeholder="Enter password">
-        </div>
-        <button class="login-btn" onclick="handleLogin()">Enter Olympus</button>
-        <div class="login-error" id="loginError"></div>
-        <div class="login-hint">Default: admin / olympus2025</div>
-    </div>
+<!-- LOGIN -->
+<div class="login" id="login">
+<div class="login-box">
+<div class="login-logo">⚡</div>
+<div class="login-title">OLYMPUS</div>
+<div class="login-sub">AI Command Center</div>
+<div class="login-field"><label>Username</label><input id="lUser" placeholder="Enter username" autocomplete="off"></div>
+<div class="login-field"><label>Password</label><input id="lPass" type="password" placeholder="Enter password"></div>
+<button class="login-btn" onclick="doLogin()">Enter Olympus</button>
+<div class="login-err" id="lErr"></div>
+<div class="login-hint">admin / olympus2025</div>
+</div>
 </div>
 
-<!-- ═══════════ APP ═══════════ -->
+<!-- APP -->
 <div class="app" id="app">
+<aside class="side">
+<div class="side-brand"><span class="bolt">⚡</span><h1>OLYMPUS</h1></div>
+<nav class="nav">
+<div class="nav-label">Command</div>
+<div class="nav-i on" data-p="dash" onclick="go('dash')"><span class="icon">📊</span><span>Dashboard</span></div>
+<div class="nav-i" data-p="chat" onclick="go('chat')"><span class="icon">💬</span><span>Group Chat</span><span class="badge" id="chatBadge" style="display:none">0</span></div>
+<div class="nav-i" data-p="tasks" onclick="go('tasks')"><span class="icon">📋</span><span>Task Board</span></div>
+<div class="nav-label">Team</div>
+<div class="nav-i" data-p="agents" onclick="go('agents')"><span class="icon">👥</span><span>Agents</span></div>
+<div class="nav-i" data-p="cmds" onclick="go('cmds')"><span class="icon">⚡</span><span>Commands</span></div>
+<div class="nav-label">Intel</div>
+<div class="nav-i" data-p="calc" onclick="go('calc')"><span class="icon">💰</span><span>Investment</span></div>
+<div class="nav-i" data-p="log" onclick="go('log')"><span class="icon">📡</span><span>Activity</span></div>
+<div class="nav-i" data-p="set" onclick="go('set')"><span class="icon">⚙️</span><span>Settings</span></div>
+</nav>
+<div class="side-foot">
+<div class="av">M</div>
+<div><div class="un">Moses</div><div class="ur">CEO</div></div>
+<button class="logout" onclick="doLogout()" title="Logout">⏻</button>
+</div>
+</aside>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <h1>Olympus</h1>
-            <span>AI Command Center</span>
-        </div>
-        <nav class="sidebar-nav">
-            <div class="nav-section-label">Command</div>
-            <div class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')">
-                <span class="icon">📊</span><span>Dashboard</span>
-            </div>
-            <div class="nav-item" data-page="org" onclick="switchPage('org')">
-                <span class="icon">🏛️</span><span>Organization</span>
-            </div>
-            <div class="nav-item" data-page="team" onclick="switchPage('team')">
-                <span class="icon">👥</span><span>Executive Team</span>
-            </div>
+<main class="main">
+<div class="top">
+<h2 id="pgTitle">Dashboard</h2>
+<div class="top-right">
+<div class="status-dot"><div class="dot-pulse"></div>ALL SYSTEMS GO</div>
+<span style="font-size:12px;color:var(--dim)" id="clock"></span>
+</div>
+</div>
+<div class="content">
 
-            <div class="nav-section-label">Operations</div>
-            <div class="nav-item" data-page="tasks" onclick="switchPage('tasks')">
-                <span class="icon">📋</span><span>Tasks</span>
-                <span class="badge" id="taskBadge">0</span>
-            </div>
-            <div class="nav-item" data-page="direct" onclick="switchPage('direct')">
-                <span class="icon">💬</span><span>Direct Agent</span>
-            </div>
-            <div class="nav-item" data-page="commands" onclick="switchPage('commands')">
-                <span class="icon">⚡</span><span>Quick Commands</span>
-            </div>
+<!-- DASHBOARD -->
+<div class="page on" id="p-dash">
+<div class="stats">
+<div class="stat"><div class="sl">Agents Online</div><div class="sv">4</div><div class="sc">● All Active</div></div>
+<div class="stat"><div class="sl">Open Tasks</div><div class="sv" id="sOpen">0</div><div class="sc">↑ Ready</div></div>
+<div class="stat"><div class="sl">Completed Today</div><div class="sv" id="sDone">0</div><div class="sc">↑ Keep going</div></div>
+<div class="stat"><div class="sl">Uptime</div><div class="sv">24/7</div><div class="sc">● Online</div></div>
+</div>
+<div class="agent-row">
+<div class="ag-card z" onclick="go('chat');setChatTarget('Zeus')"><div class="ag-emoji">⚡</div><div class="ag-name">Zeus</div><div class="ag-role">COO</div><div class="ag-status"><div class="mini"></div>Online</div></div>
+<div class="ag-card a" onclick="go('chat');setChatTarget('Athena')"><div class="ag-emoji">🦉</div><div class="ag-name">Athena</div><div class="ag-role">Strategy</div><div class="ag-status"><div class="mini"></div>Online</div></div>
+<div class="ag-card h" onclick="go('chat');setChatTarget('Hermes')"><div class="ag-emoji">🪽</div><div class="ag-name">Hermes</div><div class="ag-role">Comms</div><div class="ag-status"><div class="mini"></div>Online</div></div>
+<div class="ag-card v" onclick="go('chat');setChatTarget('Vulcan')"><div class="ag-emoji">🔨</div><div class="ag-name">Vulcan</div><div class="ag-role">Engineering</div><div class="ag-status"><div class="mini"></div>Online</div></div>
+</div>
+<div class="two-col">
+<div><div class="sec-t"><div class="dot"></div>Recent Activity</div><div id="dashAct" class="act-feed"></div></div>
+<div><div class="sec-t"><div class="dot"></div>Priority Tasks</div><div id="dashTasks"></div></div>
+</div>
+</div>
 
-            <div class="nav-section-label">Intel</div>
-            <div class="nav-item" data-page="activity" onclick="switchPage('activity')">
-                <span class="icon">📡</span><span>Activity Log</span>
-            </div>
-        </nav>
-        <div class="sidebar-footer">
-            <div class="avatar">M</div>
-            <div class="user-info">
-                <div class="user-name">Moses</div>
-                <div class="user-role">CEO — Founder</div>
-            </div>
-            <button class="logout-btn" onclick="handleLogout()" title="Logout">⏻</button>
-        </div>
-    </aside>
+<!-- GROUP CHAT -->
+<div class="page" id="p-chat">
+<div class="chat-tabs">
+<button class="chat-tab on" onclick="setChatTarget('All',this)">🏛️ Everyone</button>
+<button class="chat-tab" onclick="setChatTarget('Zeus',this)">⚡ Zeus</button>
+<button class="chat-tab" onclick="setChatTarget('Athena',this)">🦉 Athena</button>
+<button class="chat-tab" onclick="setChatTarget('Hermes',this)">🪽 Hermes</button>
+<button class="chat-tab" onclick="setChatTarget('Vulcan',this)">🔨 Vulcan</button>
+</div>
+<div class="chat-page">
+<div class="chat-box" id="chatBox"></div>
+<div class="typing" id="typingInd"></div>
+<div class="chat-bar">
+<input id="chatIn" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendChat()">
+<button class="chat-send" onclick="sendChat()">Send ⚡</button>
+</div>
+</div>
+</div>
 
-    <!-- MAIN CONTENT -->
-    <main class="main">
-        <div class="topbar">
-            <h2 id="pageTitle">Dashboard</h2>
-            <div class="topbar-actions">
-                <div class="status-indicator">
-                    <div class="status-dot"></div>
-                    ALL SYSTEMS OPERATIONAL
-                </div>
-            </div>
-        </div>
+<!-- TASKS -->
+<div class="page" id="p-tasks">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<div class="sec-t" style="margin:0"><div class="dot"></div>Task Board</div>
+<button class="prof-dm" onclick="openModal()">+ New Task</button>
+</div>
+<div class="kanban" id="kanban"></div>
+</div>
 
-        <div class="content">
+<!-- AGENTS -->
+<div class="page" id="p-agents">
+<div class="sec-t"><div class="dot"></div>Your Team</div>
+<div class="prof-grid">
+<div class="prof z">
+<div class="prof-head"><div class="prof-emoji">⚡</div><div class="prof-info"><h3>Zeus</h3><span>COO — Chief Operating Officer</span></div></div>
+<div class="prof-desc">Orchestrates all operations. Your right hand — translates your vision into executed action. Delegates to agents, ensures quality, reports back.</div>
+<div class="prof-skills"><span>Orchestration</span><span>Delegation</span><span>Quality Control</span><span>Reporting</span></div>
+<button class="prof-dm" onclick="go('chat');setChatTarget('Zeus')">💬 Direct Message</button>
+</div>
+<div class="prof a">
+<div class="prof-head"><div class="prof-emoji">🦉</div><div class="prof-info"><h3>Athena</h3><span>Strategy & Analysis Agent</span></div></div>
+<div class="prof-desc">Research, competitive analysis, market insights, data-driven recommendations. Turns raw information into strategic advantage.</div>
+<div class="prof-skills"><span>Research</span><span>Data Analysis</span><span>Strategy</span><span>Competitive Intel</span><span>Reports</span></div>
+<button class="prof-dm" onclick="go('chat');setChatTarget('Athena')">💬 Direct Message</button>
+</div>
+<div class="prof h">
+<div class="prof-head"><div class="prof-emoji">🪽</div><div class="prof-info"><h3>Hermes</h3><span>Communications & Logistics</span></div></div>
+<div class="prof-desc">Emails, scheduling, coordination, outreach, follow-ups. Keeps the lines of communication open and logistics flowing.</div>
+<div class="prof-skills"><span>Email Drafting</span><span>Scheduling</span><span>Coordination</span><span>Outreach</span><span>Reminders</span></div>
+<button class="prof-dm" onclick="go('chat');setChatTarget('Hermes')">💬 Direct Message</button>
+</div>
+<div class="prof v">
+<div class="prof-head"><div class="prof-emoji">🔨</div><div class="prof-info"><h3>Vulcan</h3><span>Engineering & Operations</span></div></div>
+<div class="prof-desc">Code, builds, technical projects, automation, infrastructure. Forges the tools and systems that power the organization.</div>
+<div class="prof-skills"><span>Development</span><span>Automation</span><span>Infrastructure</span><span>Technical Ops</span><span>Debugging</span></div>
+<button class="prof-dm" onclick="go('chat');setChatTarget('Vulcan')">💬 Direct Message</button>
+</div>
+</div>
+</div>
 
-            <!-- DASHBOARD PAGE -->
-            <div class="page active" id="page-dashboard">
-                <div class="stats-row">
-                    <div class="stat-card">
-                        <div class="stat-label">Active Agents</div>
-                        <div class="stat-value">3</div>
-                        <div class="stat-change up">● All Online</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Open Tasks</div>
-                        <div class="stat-value" id="statOpenTasks">0</div>
-                        <div class="stat-change up">↑ Ready for dispatch</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Completed Today</div>
-                        <div class="stat-value" id="statCompleted">0</div>
-                        <div class="stat-change up">↑ Keep it going</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Uptime</div>
-                        <div class="stat-value">24/7</div>
-                        <div class="stat-change up">● Operational</div>
-                    </div>
-                </div>
+<!-- COMMANDS -->
+<div class="page" id="p-cmds">
+<div class="sec-t"><div class="dot"></div>Quick Commands</div>
+<div class="cmd-grid">
+<div class="cmd" onclick="runCmd('status')"><div class="ci">📊</div><div class="cn">Status Report</div><div class="cd">Full status from all agents</div></div>
+<div class="cmd" onclick="runCmd('standup')"><div class="ci">🗣️</div><div class="cn">Daily Standup</div><div class="cd">Each agent reports what they're doing</div></div>
+<div class="cmd" onclick="runCmd('research')"><div class="ci">🔍</div><div class="cn">Research Topic</div><div class="cd">Athena researches anything you need</div></div>
+<div class="cmd" onclick="runCmd('draft')"><div class="ci">📧</div><div class="cn">Draft Message</div><div class="cd">Hermes drafts emails, posts, messages</div></div>
+<div class="cmd" onclick="runCmd('build')"><div class="ci">🔨</div><div class="cn">Build Something</div><div class="cd">Vulcan starts a build task</div></div>
+<div class="cmd" onclick="runCmd('priority')"><div class="ci">🔥</div><div class="cn">Priority Check</div><div class="cd">Review all high-priority items</div></div>
+<div class="cmd" onclick="runCmd('strategy')"><div class="ci">🧠</div><div class="cn">Strategic Review</div><div class="cd">Athena gives strategic analysis</div></div>
+<div class="cmd" onclick="runCmd('eod')"><div class="ci">📋</div><div class="cn">End of Day</div><div class="cd">Summary of everything that happened</div></div>
+</div>
+</div>
 
-                <div class="two-col">
-                    <div>
-                        <div class="section-title"><span class="dot"></span> Recent Activity</div>
-                        <div class="activity-feed" id="dashboardActivity"></div>
-                    </div>
-                    <div>
-                        <div class="section-title"><span class="dot"></span> Priority Tasks</div>
-                        <div class="task-list" id="dashboardTasks"></div>
-                    </div>
-                </div>
-            </div>
+<!-- INVESTMENT CALC -->
+<div class="page" id="p-calc">
+<div class="sec-t"><div class="dot"></div>$100 Investment Calculator</div>
+<div class="calc-wrap">
+<div class="calc-row">
+<div class="calc-field"><label>Starting Amount</label><input type="number" id="cStart" value="100" oninput="calcUpdate()"></div>
+<div class="calc-field"><label>Monthly Contribution</label><input type="number" id="cMonth" value="25" oninput="calcUpdate()"></div>
+</div>
+<div style="margin-bottom:12px"><label style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:6px">Expected Return</label>
+<div class="ret-btns">
+<button class="ret-btn on" onclick="setReturn(4,this)">4% Savings</button>
+<button class="ret-btn" onclick="setReturn(7,this)">7% Index Funds</button>
+<button class="ret-btn" onclick="setReturn(10,this)">10% Aggressive</button>
+</div></div>
+<div class="slider-wrap"><label>Time Horizon: <span id="yrLabel">10</span> Years</label><input type="range" min="1" max="30" value="10" id="yrSlider" oninput="calcUpdate()"></div>
+<div class="results">
+<div class="res-card blue"><div class="rl">Total Invested</div><div class="rv" id="rInvested">$0</div></div>
+<div class="res-card green"><div class="rl">Interest Earned</div><div class="rv" id="rInterest">$0</div></div>
+<div class="res-card gold"><div class="rl">Final Portfolio</div><div class="rv" id="rTotal">$0</div></div>
+</div>
+<div class="bar-chart" id="barChart"></div>
+</div>
+</div>
 
-            <!-- ORG CHART PAGE -->
-            <div class="page" id="page-org">
-                <div class="section-title"><span class="dot"></span> Organizational Structure</div>
-                <div class="org-chart">
-                    <!-- CEO -->
-                    <div class="org-node ceo">
-                        <div class="role-badge ceo-badge">Chief Executive Officer</div>
-                        <div class="name">Moses</div>
-                        <div class="title">Founder & CEO</div>
-                        <div class="status online"><div class="status-dot" style="width:6px;height:6px;"></div> Online</div>
-                    </div>
-                    <div class="org-connector"></div>
-                    <!-- COO -->
-                    <div class="org-node exec">
-                        <div class="role-badge exec-badge">Chief Operating Officer</div>
-                        <div class="name">⚡ Zeus</div>
-                        <div class="title">COO — Operations & Orchestration</div>
-                        <div class="status online"><div class="status-dot" style="width:6px;height:6px;"></div> Active</div>
-                    </div>
-                    <div class="org-connector"></div>
-                    <div class="org-horizontal-line"></div>
-                    <!-- AGENTS -->
-                    <div class="org-row">
-                        <div class="org-branch">
-                            <div class="org-node agent">
-                                <div class="role-badge agent-badge">Strategy Agent</div>
-                                <div class="name">🦉 Athena</div>
-                                <div class="title">Strategy & Analysis</div>
-                                <div class="status online"><div class="status-dot" style="width:6px;height:6px;"></div> Active</div>
-                            </div>
-                        </div>
-                        <div class="org-branch">
-                            <div class="org-node agent">
-                                <div class="role-badge agent-badge">Comms Agent</div>
-                                <div class="name">🪽 Hermes</div>
-                                <div class="title">Communications & Logistics</div>
-                                <div class="status online"><div class="status-dot" style="width:6px;height:6px;"></div> Active</div>
-                            </div>
-                        </div>
-                        <div class="org-branch">
-                            <div class="org-node agent">
-                                <div class="role-badge agent-badge">Engineering Agent</div>
-                                <div class="name">🔨 Vulcan</div>
-                                <div class="title">Engineering & Operations</div>
-                                <div class="status online"><div class="status-dot" style="width:6px;height:6px;"></div> Active</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- ACTIVITY -->
+<div class="page" id="p-log">
+<div class="sec-t"><div class="dot"></div>Activity Log</div>
+<div class="act-feed" id="actFeed"></div>
+</div>
 
-            <!-- TEAM PAGE -->
-            <div class="page" id="page-team">
-                <div class="section-title"><span class="dot"></span> Executive Team</div>
-                <div class="team-grid">
-                    <div class="team-card">
-                        <div class="team-card-header">
-                            <div class="team-avatar zeus">⚡</div>
-                            <div class="info">
-                                <h3>Zeus</h3>
-                                <span>COO — Chief Operating Officer</span>
-                            </div>
-                        </div>
-                        <div class="description">Orchestrates all operations, delegates tasks to agents, ensures everything runs on time. Your right hand — translates your vision into executed action.</div>
-                        <div class="skills">
-                            <span class="skill-tag">Orchestration</span>
-                            <span class="skill-tag">Delegation</span>
-                            <span class="skill-tag">Task Management</span>
-                            <span class="skill-tag">Quality Control</span>
-                            <span class="skill-tag">Reporting</span>
-                        </div>
-                    </div>
-                    <div class="team-card">
-                        <div class="team-card-header">
-                            <div class="team-avatar athena">🦉</div>
-                            <div class="info">
-                                <h3>Athena</h3>
-                                <span>Strategy & Analysis Agent</span>
-                            </div>
-                        </div>
-                        <div class="description">Research, competitive analysis, market insights, data-driven recommendations. Athena turns raw information into strategic advantage.</div>
-                        <div class="skills">
-                            <span class="skill-tag">Market Research</span>
-                            <span class="skill-tag">Data Analysis</span>
-                            <span class="skill-tag">Strategy</span>
-                            <span class="skill-tag">Competitive Intel</span>
-                            <span class="skill-tag">Reports</span>
-                        </div>
-                    </div>
-                    <div class="team-card">
-                        <div class="team-card-header">
-                            <div class="team-avatar hermes">🪽</div>
-                            <div class="info">
-                                <h3>Hermes</h3>
-                                <span>Communications & Logistics Agent</span>
-                            </div>
-                        </div>
-                        <div class="description">Emails, scheduling, coordination, outreach, follow-ups. Hermes keeps the lines of communication open and the logistics flowing.</div>
-                        <div class="skills">
-                            <span class="skill-tag">Email Drafting</span>
-                            <span class="skill-tag">Scheduling</span>
-                            <span class="skill-tag">Coordination</span>
-                            <span class="skill-tag">Outreach</span>
-                            <span class="skill-tag">Reminders</span>
-                        </div>
-                    </div>
-                    <div class="team-card">
-                        <div class="team-card-header">
-                            <div class="team-avatar vulcan">🔨</div>
-                            <div class="info">
-                                <h3>Vulcan</h3>
-                                <span>Engineering & Operations Agent</span>
-                            </div>
-                        </div>
-                        <div class="description">Code, builds, technical projects, automation, infrastructure. Vulcan forges the tools and systems that power the organization.</div>
-                        <div class="skills">
-                            <span class="skill-tag">Development</span>
-                            <span class="skill-tag">Automation</span>
-                            <span class="skill-tag">Infrastructure</span>
-                            <span class="skill-tag">Technical Ops</span>
-                            <span class="skill-tag">Debugging</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- SETTINGS -->
+<div class="page" id="p-set">
+<div class="sec-t"><div class="dot"></div>Settings</div>
+<div class="set-group">
+<h3>Theme</h3>
+<div class="set-row"><div><div class="set-label">Accent Color</div><div class="set-desc">Choose your vibe</div></div><div class="theme-btns">
+<div class="theme-btn gold on" onclick="setTheme('gold',this)"></div>
+<div class="theme-btn blue" onclick="setTheme('blue',this)"></div>
+<div class="theme-btn purple" onclick="setTheme('purple',this)"></div>
+</div></div>
+</div>
+<div class="set-group">
+<h3>Notifications</h3>
+<div class="set-row"><div><div class="set-label">Sound Effects</div><div class="set-desc">Play sounds on agent responses</div></div><div class="toggle on" id="togSound" onclick="this.classList.toggle('on')"></div></div>
+<div class="set-row"><div><div class="set-label">Agent Typing Indicators</div><div class="set-desc">Show "Agent is typing..." in chat</div></div><div class="toggle on" id="togTyping" onclick="this.classList.toggle('on')"></div></div>
+</div>
+<div class="set-group">
+<h3>Data</h3>
+<div class="set-row"><div><div class="set-label">Clear Chat History</div><div class="set-desc">Delete all chat messages</div></div><button class="prof-dm" onclick="clearChat()">Clear</button></div>
+<div class="set-row"><div><div class="set-label">Clear All Tasks</div><div class="set-desc">Reset task board</div></div><button class="prof-dm" onclick="clearTasks()">Reset</button></div>
+<div class="set-row"><div><div class="set-label">Reset Everything</div><div class="set-desc">Factory reset OLYMPUS</div></div><button class="prof-dm" style="border-color:var(--red);color:var(--red)" onclick="resetAll()">Reset</button></div>
+</div>
+<div class="set-group">
+<h3>About</h3>
+<div style="font-size:12px;color:var(--text2);line-height:1.8">
+<b style="color:var(--gold)">OLYMPUS</b> — AI Command Center v2.0<br>
+Built by Zeus ⚡ for Moses<br>
+Agents: Zeus • Athena • Hermes • Vulcan<br>
+Powered by OpenClaw
+</div>
+</div>
+</div>
 
-            <!-- TASKS PAGE -->
-            <div class="page" id="page-tasks">
-                <div class="section-title"><span class="dot"></span> Task Management</div>
-                <div class="task-filters">
-                    <button class="filter-btn active" onclick="filterTasks('all', this)">All</button>
-                    <button class="filter-btn" onclick="filterTasks('open', this)">Open</button>
-                    <button class="filter-btn" onclick="filterTasks('completed', this)">Completed</button>
-                    <button class="filter-btn" onclick="filterTasks('high', this)">High Priority</button>
-                </div>
-                <div class="task-list" id="taskList"></div>
-                <div class="add-task-bar">
-                    <input type="text" id="newTaskInput" placeholder="Add a new task..." onkeydown="if(event.key==='Enter')addTask()">
-                    <select id="newTaskAssignee">
-                        <option value="Zeus">Zeus</option>
-                        <option value="Athena">Athena</option>
-                        <option value="Hermes">Hermes</option>
-                        <option value="Vulcan">Vulcan</option>
-                    </select>
-                    <select id="newTaskPriority">
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                    </select>
-                    <button class="add-task-btn" onclick="addTask()">+ Add</button>
-                </div>
-            </div>
+</div>
+</main>
+</div>
 
-            <!-- DIRECT AGENT PAGE -->
-            <div class="page" id="page-direct">
-                <div class="section-title"><span class="dot"></span> Direct Agent Communication</div>
-                <div class="task-filters" style="margin-bottom:16px;">
-                    <button class="filter-btn active" onclick="selectAgent('Zeus', this)">⚡ Zeus</button>
-                    <button class="filter-btn" onclick="selectAgent('Athena', this)">🦉 Athena</button>
-                    <button class="filter-btn" onclick="selectAgent('Hermes', this)">🪽 Hermes</button>
-                    <button class="filter-btn" onclick="selectAgent('Vulcan', this)">🔨 Vulcan</button>
-                </div>
-                <div class="message-panel">
-                    <div class="messages-container" id="messagesContainer"></div>
-                    <div class="message-input-bar">
-                        <input type="text" id="messageInput" placeholder="Send a directive..." onkeydown="if(event.key==='Enter')sendMessage()">
-                        <button class="send-btn" onclick="sendMessage()">Send ⚡</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- COMMANDS PAGE -->
-            <div class="page" id="page-commands">
-                <div class="section-title"><span class="dot"></span> Quick Commands</div>
-                <div class="commands-grid">
-                    <div class="command-card" onclick="runCommand('status')">
-                        <div class="cmd-icon">📊</div>
-                        <div class="cmd-name">Status Report</div>
-                        <div class="cmd-desc">Get a full status report from all agents</div>
-                    </div>
-                    <div class="command-card" onclick="runCommand('standup')">
-                        <div class="cmd-icon">🗣️</div>
-                        <div class="cmd-name">Daily Standup</div>
-                        <div class="cmd-desc">Each agent reports what they're working on</div>
-                    </div>
-                    <div class="command-card" onclick="runCommand('priority')">
-                        <div class="cmd-icon">🔥</div>
-                        <div class="cmd-name">Priority Check</div>
-                        <div class="cmd-desc">Review all high-priority items</div>
-                    </div>
-                    <div class="command-card" onclick="runCommand('research')">
-                        <div class="cmd-icon">🔍</div>
-                        <div class="cmd-name">Research Task</div>
-                        <div class="cmd-desc">Assign research to Athena</div>
-                    </div>
-                    <div class="command-card" onclick="runCommand('outreach')">
-                        <div class="cmd-icon">📧</div>
-                        <div class="cmd-name">Draft Outreach</div>
-                        <div class="cmd-desc">Hermes drafts communications</div>
-                    </div>
-                    <div class="command-card" onclick="runCommand('build')">
-                        <div class="cmd-icon">🔨</div>
-                        <div class="cmd-name">Build Something</div>
-                        <div class="cmd-desc">Vulcan starts a build task</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ACTIVITY PAGE -->
-            <div class="page" id="page-activity">
-                <div class="section-title"><span class="dot"></span> Activity Log</div>
-                <div class="activity-feed" id="activityFeed"></div>
-            </div>
-
-        </div>
-    </main>
+<!-- ADD TASK MODAL -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+<div class="modal">
+<h3>⚡ New Task</h3>
+<input id="mTask" placeholder="What needs to be done?">
+<select id="mAgent"><option value="Zeus">⚡ Zeus</option><option value="Athena">🦉 Athena</option><option value="Hermes">🪽 Hermes</option><option value="Vulcan">🔨 Vulcan</option></select>
+<select id="mPri"><option value="high">🔴 High Priority</option><option value="medium">🟡 Medium</option><option value="low">🟢 Low</option></select>
+<div class="modal-btns"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveTask()">Create Task</button></div>
+</div>
 </div>
 
 <script>
-// ═══════════ STATE ═══════════
-const state = {
-    tasks: [],
-    activities: [],
-    messages: {},
-    currentAgent: 'Zeus',
-    completedToday: 0,
-    taskIdCounter: 0
+// ═══════ PARTICLES ═══════
+const cv=document.getElementById('particles'),cx=cv.getContext('2d');
+let pts=[];
+function resizeP(){cv.width=innerWidth;cv.height=innerHeight}
+resizeP();addEventListener('resize',resizeP);
+for(let i=0;i<60;i++)pts.push({x:Math.random()*cv.width,y:Math.random()*cv.height,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,o:Math.random()*.3+.1});
+function drawP(){cx.clearRect(0,0,cv.width,cv.height);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=cv.width;if(p.x>cv.width)p.x=0;if(p.y<0)p.y=cv.height;if(p.y>cv.height)p.y=0;cx.beginPath();cx.arc(p.x,p.y,p.r,0,Math.PI*2);cx.fillStyle=`rgba(212,168,67,${p.o})`;cx.fill()});for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){const d=Math.hypot(pts[i].x-pts[j].x,pts[i].y-pts[j].y);if(d<150){cx.beginPath();cx.moveTo(pts[i].x,pts[i].y);cx.lineTo(pts[j].x,pts[j].y);cx.strokeStyle=`rgba(212,168,67,${.06*(1-d/150)})`;cx.stroke()}}requestAnimationFrame(drawP)}
+drawP();
+
+// ═══════ STATE ═══════
+const AG={Zeus:{e:'⚡',c:'z',r:'COO'},Athena:{e:'🦉',c:'a',r:'Strategy'},Hermes:{e:'🪽',c:'h',r:'Comms'},Vulcan:{e:'🔨',c:'v',r:'Engineering'}};
+let S={tasks:[],act:[],chats:{},chatTarget:'All',done:0,ret:4};
+
+function save(){localStorage.setItem('olympus',JSON.stringify(S))}
+function load(){const d=localStorage.getItem('olympus');if(d)S=JSON.parse(d)}
+
+// ═══════ LOGIN ═══════
+function doLogin(){
+if(document.getElementById('lUser').value==='admin'&&document.getElementById('lPass').value==='olympus2025'){
+document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.on=true;document.getElementById('app').classList.add('on');
+load();init();addAct('gold','<strong>Moses</strong> signed in');
+}else document.getElementById('lErr').textContent='Invalid credentials';
+}
+function doLogout(){document.getElementById('login').classList.remove('hidden');document.getElementById('app').classList.remove('on')}
+document.getElementById('lPass').onkeydown=e=>{if(e.key==='Enter')doLogin()};
+document.getElementById('lUser').onkeydown=e=>{if(e.key==='Enter')document.getElementById('lPass').focus()};
+
+// ═══════ NAV ═══════
+function go(p){
+document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
+document.querySelectorAll('.nav-i').forEach(x=>x.classList.remove('on'));
+document.getElementById('p-'+p).classList.add('on');
+document.querySelector(`.nav-i[data-p="${p}"]`).classList.add('on');
+const t={dash:'Dashboard',chat:'Group Chat',tasks:'Task Board',agents:'Agents',cmds:'Commands',calc:'Investment Calculator',log:'Activity Log',set:'Settings'};
+document.getElementById('pgTitle').textContent=t[p]||p;
+}
+
+// ═══════ CLOCK ═══════
+setInterval(()=>{const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})},1000);
+
+// ═══════ ACTIVITY ═══════
+function addAct(color,text){S.act.unshift({color,text,time:Date.now()});renderAct();save()}
+function renderAct(){
+const h=S.act.slice(0,20).map(a=>`<div class="act-i"><div class="act-dot ${a.color}"></div><div><div class="act-text">${a.text}</div><div class="act-time">${timeAgo(a.time)}</div></div></div>`).join('');
+document.getElementById('actFeed').innerHTML=h;
+document.getElementById('dashAct').innerHTML=S.act.slice(0,5).map(a=>`<div class="act-i"><div class="act-dot ${a.color}"></div><div><div class="act-text">${a.text}</div><div class="act-time">${timeAgo(a.time)}</div></div></div>`).join('');
+}
+function timeAgo(t){const s=Math.floor((Date.now()-t)/1000);if(s<60)return'Just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return new Date(t).toLocaleDateString()}
+
+// ═══════ CHAT ═══════
+const RESPONSES={
+Zeus:["⚡ Copy that. Coordinating with the team now.","⚡ Acknowledged. I'll prioritize this.","⚡ On it, Moses. Update incoming.","⚡ Roger that. Let me pull the latest.","⚡ Understood. Moving this to the top."],
+Athena:["🦉 Interesting angle. Let me analyze this.","🦉 Running analysis — expect insights shortly.","🦉 Good call. I see several strategic options here.","🦉 On it. Compiling findings now.","🦉 Data incoming. Let me dig into this."],
+Hermes:["🪽 Got it! Drafting now.","🪽 On it — I'll coordinate and follow up.","🪽 Consider it done. Wheels are turning.","🪽 Absolutely. Having something ready shortly.","🪽 Received. I'll draft and send for review."],
+Vulcan:["🔨 Building it now. ETA: soon.","🔨 Acknowledged. Deploying solution.","🔨 On it. Right in my wheelhouse.","🔨 Consider it forged. Working on it.","🔨 Got it. Architecting now."]
 };
 
-const AGENTS = {
-    Zeus: { emoji: '⚡', color: 'gold', role: 'COO' },
-    Athena: { emoji: '🦉', color: 'blue', role: 'Strategy' },
-    Hermes: { emoji: '🪽', color: 'green', role: 'Comms' },
-    Vulcan: { emoji: '🔨', color: 'purple', role: 'Engineering' }
+function setChatTarget(t,btn){
+S.chatTarget=t;
+if(btn){document.querySelectorAll('.chat-tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on')}
+renderChat();
+}
+
+function sendChat(){
+const inp=document.getElementById('chatIn'),text=inp.value.trim();
+if(!text)return;
+const key=S.chatTarget==='All'?'group':S.chatTarget;
+if(!S.chats[key])S.chats[key]=[];
+S.chats[key].push({from:'Moses',text,time:Date.now()});
+inp.value='';renderChat();save();
+addAct('gold',`<strong>Moses</strong> → ${S.chatTarget}: "${text.slice(0,50)}${text.length>50?'...':''}"`);
+
+// Determine who responds
+const responders=S.chatTarget==='All'?['Zeus','Athena','Hermes','Vulcan']:[S.chatTarget];
+const typing=document.getElementById('typingInd');
+
+responders.forEach((agent,i)=>{
+const delay=800+i*1200;
+if(document.getElementById('togTyping').classList.contains('on')){
+setTimeout(()=>{typing.textContent=`${AG[agent].e} ${agent} is typing...`},delay-600);
+setTimeout(()=>{typing.textContent=''},delay);
+}
+setTimeout(()=>{
+const pool=RESPONSES[agent];
+const resp=pool[Math.floor(Math.random()*pool.length)];
+if(!S.chats[key])S.chats[key]=[];
+S.chats[key].push({from:agent,text:resp,time:Date.now()});
+renderChat();save();
+addAct(AG[agent].c,`<strong>${agent}</strong> responded`);
+},delay);
+});
+}
+
+function renderChat(){
+const key=S.chatTarget==='All'?'group':S.chatTarget;
+const msgs=S.chats[key]||[];
+document.getElementById('chatBox').innerHTML=msgs.map(m=>{
+const isU=m.from==='Moses';
+const ag=AG[m.from];
+return`<div class="msg ${isU?'user':'bot'}">${!isU?`<div class="sender ${ag.c}">${ag.e} ${m.from}</div>`:''}${m.text}<div class="time">${timeAgo(m.time)}</div></div>`;
+}).join('');
+const box=document.getElementById('chatBox');box.scrollTop=box.scrollHeight;
+}
+
+// ═══════ TASKS ═══════
+function renderTasks(){
+const cols={todo:[],doing:[],done:[]};
+S.tasks.forEach(t=>{if(t.col==='todo')cols.todo.push(t);else if(t.col==='doing')cols.doing.push(t);else cols.done.push(t)});
+const kan=document.getElementById('kanban');
+kan.innerHTML=['todo','doing','done'].map(c=>{
+const title={todo:'To Do',doing:'In Progress',done:'Done'}[c];
+return`<div class="kan-col"><div class="kan-h">${title}<span class="cnt">${cols[c].length}</span></div>${cols[c].map(t=>`<div class="kan-card" onclick="moveTask(${t.id})"><div class="kt">${t.title}</div><div class="km"><span class="pri-${t.pri}">${t.pri}</span><span style="color:var(--text2)">${AG[t.agent]?.e||''} ${t.agent}</span></div></div>`).join('')}<button class="add-task-btn" onclick="openModal()">+ Add Task</button></div>`;
+}).join('');
+document.getElementById('sOpen').textContent=S.tasks.filter(t=>t.col!=='done').length;
+document.getElementById('sDone').textContent=S.done;
+document.getElementById('dashTasks').innerHTML=S.tasks.filter(t=>t.col==='todo'&&t.pri==='high').slice(0,5).map(t=>`<div class="kan-card"><div class="kt">${t.title}</div><div class="km"><span class="pri-h">high</span><span style="color:var(--text2)">${AG[t.agent]?.e||''} ${t.agent}</span></div></div>`).join('');
+}
+
+function moveTask(id){
+const t=S.tasks.find(x=>x.id===id);if(!t)return;
+if(t.col==='todo'){t.col='doing';addAct('blue',`<strong>${t.agent}</strong> started: "${t.title}"`)}
+else if(t.col==='doing'){t.col='done';S.done++;addAct('green',`✅ Completed: "${t.title}" by <strong>${t.agent}</strong>`)}
+else{t.col='todo';S.done=Math.max(0,S.done-1)}
+renderTasks();save();
+}
+
+function openModal(){document.getElementById('modalBg').classList.add('on');document.getElementById('mTask').focus()}
+function closeModal(){document.getElementById('modalBg').classList.remove('on')}
+function saveTask(){
+const title=document.getElementById('mTask').value.trim();
+if(!title)return;
+const agent=document.getElementById('mAgent').value;
+const pri=document.getElementById('mPri').value;
+S.tasks.unshift({id:Date.now(),title,agent,pri,col:'todo'});
+document.getElementById('mTask').value='';closeModal();
+renderTasks();save();addAct(AG[agent].c,`New task for <strong>${agent}</strong>: "${title}"`);
+}
+
+// ═══════ COMMANDS ═══════
+function runCmd(cmd){
+go('chat');
+const actions={
+status:()=>{const msgs=["📊 **Status Report**\n\n⚡ Zeus: All systems nominal. Team ready.\n🦉 Athena: Standing by for analysis tasks.\n🪽 Hermes: Calendar clear. Ready for outreach.\n🔨 Vulcan: Infrastructure stable. Ready to build.\n\nAll 4 agents online. 0 critical issues."];
+const key='group';if(!S.chats[key])S.chats[key]=[];
+S.chats[key].push({from:'Zeus',text:msgs[0],time:Date.now()});addAct('gold','<strong>Moses</strong> requested Status Report')},
+standup:()=>{['Zeus','Athena','Hermes','Vulcan'].forEach((a,i)=>{setTimeout(()=>{const key='group';if(!S.chats[key])S.chats[key]=[];
+const standups={Zeus:'⚡ Daily Standup: Coordinating operations. All green. Standing by for directives.',Athena:'🦉 Daily Standup: Monitoring trends. Ready for research assignments.',Hermes:'🪽 Daily Standup: Comms clear. Ready for outreach and drafting.',Vulcan:'🔨 Daily Standup: Dev environment hot. Ready to build.'};
+S.chats[key].push({from:a,text:standups[a],time:Date.now()});renderChat();save()},i*1000)});
+addAct('gold','<strong>Moses</strong> initiated Daily Standup')},
+research:()=>{const topic=prompt('What should Athena research?');if(topic){S.tasks.unshift({id:Date.now(),title:'Research: '+topic,agent:'Athena',pri:'high',col:'todo'});renderTasks();save();addAct('gold',`<strong>Moses</strong> → <strong>Athena</strong>: Research "${topic}"`)}},
+draft:()=>{const topic=prompt('What should Hermes draft?');if(topic){S.tasks.unshift({id:Date.now(),title:'Draft: '+topic,agent:'Hermes',pri:'medium',col:'todo'});renderTasks();save();addAct('gold',`<strong>Moses</strong> → <strong>Hermes</strong>: Draft "${topic}"`)}},
+build:()=>{const topic=prompt('What should Vulcan build?');if(topic){S.tasks.unshift({id:Date.now(),title:'Build: '+topic,agent:'Vulcan',pri:'high',col:'todo'});renderTasks();save();addAct('gold',`<strong>Moses</strong> → <strong>Vulcan</strong>: Build "${topic}"`)}},
+priority:()=>{const high=S.tasks.filter(t=>t.col!=='done'&&t.pri==='high');const key='group';if(!S.chats[key])S.chats[key]=[];
+S.chats[key].push({from:'Zeus',text:high.length?`🔥 ${high.length} high-priority items:\n${high.map(t=>`• ${t.title} (${t.agent})`).join('\n')}`:'🔥 No high-priority items. Clear skies.',time:Date.now()});addAct('gold','<strong>Moses</strong> ran Priority Check')},
+strategy:()=>{const topic=prompt('What strategic question for Athena?');if(topic){const key='group';if(!S.chats[key])S.chats[key]=[];
+S.chats[key].push({from:'Athena',text:`🧠 Strategic Analysis on "${topic}":\n\nBased on current market conditions, I recommend a phased approach. Start with minimum viable investment, measure results for 30 days, then scale what works. The data supports starting small and iterating fast.\n\nWant me to deep-dive on any specific angle?`,time:Date.now()});addAct('blue',`<strong>Athena</strong> delivered strategic analysis`)},
+eod:()=>{const key='group';if(!S.chats[key])S.chats[key]=[];
+S.chats[key].push({from:'Zeus',text:`📋 **End of Day Report**\n\nTasks completed today: ${S.done}\nOpen tasks: ${S.tasks.filter(t=>t.col!=='done').length}\nActivity log entries: ${S.act.length}\n\nSolid work today, Moses. The team delivered. ⚡`,time:Date.now()});addAct('gold','<strong>Moses</strong> requested EOD Report')}
 };
-
-// ═══════════ LOGIN ═══════════
-function handleLogin() {
-    const user = document.getElementById('loginUser').value;
-    const pass = document.getElementById('loginPass').value;
-    if (user === 'admin' && pass === 'olympus2025') {
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('app').classList.add('active');
-        addActivity('gold', '<strong>Moses</strong> signed in to Olympus');
-        init();
-    } else {
-        document.getElementById('loginError').textContent = 'Invalid credentials. Try again.';
-    }
+if(actions[cmd])actions[cmd]();
+renderChat();
 }
 
-function handleLogout() {
-    document.getElementById('loginScreen').classList.remove('hidden');
-    document.getElementById('app').classList.remove('active');
+// ═══════ CALCULATOR ═══════
+function setReturn(r,btn){S.ret=r;document.querySelectorAll('.ret-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');calcUpdate()}
+function calcUpdate(){
+const start=parseFloat(document.getElementById('cStart').value)||100;
+const month=parseFloat(document.getElementById('cMonth').value)||25;
+const years=parseInt(document.getElementById('yrSlider').value);
+const rate=S.ret/100;
+document.getElementById('yrLabel').textContent=years;
+let total=start,invested=start;const bars=[];
+for(let y=1;y<=years;y++){for(let m=0;m<12;m++){total=total*(1+rate/12)+month;invested+=month}bars.push({y,val:total})}
+document.getElementById('rInvested').textContent='$'+Math.round(invested).toLocaleString();
+document.getElementById('rInterest').textContent='$'+Math.round(total-invested).toLocaleString();
+document.getElementById('rTotal').textContent='$'+Math.round(total).toLocaleString();
+const max=Math.max(...bars.map(b=>b.val));
+document.getElementById('barChart').innerHTML=bars.map(b=>`<div class="bar" style="height:${(b.val/max)*100}%"><div class="tip">Yr ${b.y}: $${Math.round(b.val).toLocaleString()}</div></div>`).join('');
 }
 
-// ═══════════ NAVIGATION ═══════════
-function switchPage(page) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + page).classList.add('active');
-    document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
-    const titles = {
-        dashboard: 'Dashboard',
-        org: 'Organization',
-        team: 'Executive Team',
-        tasks: 'Task Management',
-        direct: 'Direct Agent',
-        commands: 'Quick Commands',
-        activity: 'Activity Log'
-    };
-    document.getElementById('pageTitle').textContent = titles[page] || page;
+// ═══════ SETTINGS ═══════
+function setTheme(color,btn){
+document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+const colors={gold:'#d4a843',blue:'#4a9eff',purple:'#8b5cf6'};
+document.documentElement.style.setProperty('--gold',colors[color]);
 }
+function clearChat(){S.chats={};renderChat();save();addAct('gold','<strong>Moses</strong> cleared chat history')}
+function clearTasks(){S.tasks=[];S.done=0;renderTasks();save();addAct('gold','<strong>Moses</strong> reset task board')}
+function resetAll(){if(confirm('Reset everything? This cannot be undone.')){localStorage.removeItem('olympus');location.reload()}}
 
-// ═══════════ TASKS ═══════════
-function addTask() {
-    const input = document.getElementById('newTaskInput');
-    const assignee = document.getElementById('newTaskAssignee').value;
-    const priority = document.getElementById('newTaskPriority').value;
-    const title = input.value.trim();
-    if (!title) return;
-
-    const task = {
-        id: ++state.taskIdCounter,
-        title,
-        assignee,
-        priority,
-        completed: false,
-        created: new Date()
-    };
-
-    state.tasks.unshift(task);
-    input.value = '';
-    renderTasks();
-    updateStats();
-    addActivity(AGENTS[assignee].color, `<strong>${assignee}</strong> assigned: "${title}"`);
+// ═══════ INIT ═══════
+function init(){
+if(!S.tasks.length){
+S.tasks=[
+{id:1,title:'Set up daily briefing schedule',agent:'Zeus',pri:'high',col:'todo'},
+{id:2,title:'Research competitor landscape',agent:'Athena',pri:'medium',col:'doing'},
+{id:3,title:'Draft welcome email template',agent:'Hermes',pri:'low',col:'todo'},
+{id:4,title:'Configure monitoring dashboard',agent:'Vulcan',pri:'medium',col:'todo'},
+];
+S.act=[
+{color:'gold',text:'<strong>Olympus</strong> system initialized',time:Date.now()},
+{color:'gold',text:'<strong>Moses</strong> — CEO onboarded',time:Date.now()},
+{color:'blue',text:'<strong>Zeus</strong> — COO online',time:Date.now()},
+{color:'blue',text:'<strong>Athena</strong> — Strategy agent deployed',time:Date.now()},
+{color:'green',text:'<strong>Hermes</strong> — Comms agent deployed',time:Date.now()},
+{color:'purple',text:'<strong>Vulcan</strong> — Engineering agent deployed',time:Date.now()},
+];
+Object.keys(AG).forEach(a=>{S.chats[a]=[];S.chats.group=[]});
+S.chats.group=[{from:'Zeus',text:'⚡ OLYMPUS is online. All agents reporting for duty. What\'s the first directive, Moses?',time:Date.now()}];
+save();
 }
-
-function toggleTask(id) {
-    const task = state.tasks.find(t => t.id === id);
-    if (task) {
-        task.completed = !task.completed;
-        if (task.completed) {
-            state.completedToday++;
-            addActivity('green', `Task completed: "${task.title}" by <strong>${task.assignee}</strong>`);
-        }
-        renderTasks();
-        updateStats();
-    }
+renderTasks();renderAct();renderChat();calcUpdate();
 }
-
-function filterTasks(filter, btn) {
-    document.querySelectorAll('.task-filters .filter-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    renderTasks(filter);
-}
-
-function renderTasks(filter = 'all') {
-    const list = document.getElementById('taskList');
-    const dashList = document.getElementById('dashboardTasks');
-    let filtered = state.tasks;
-
-    if (filter === 'open') filtered = filtered.filter(t => !t.completed);
-    if (filter === 'completed') filtered = filtered.filter(t => t.completed);
-    if (filter === 'high') filtered = filtered.filter(t => t.priority === 'high');
-
-    list.innerHTML = filtered.map(t => `
-        <div class="task-item ${t.completed ? 'completed' : ''}">
-            <div class="task-check ${t.completed ? 'done' : ''}" onclick="toggleTask(${t.id})"></div>
-            <div class="task-info">
-                <div class="task-title">${t.title}</div>
-                <div class="task-meta">
-                    <span class="task-priority priority-${t.priority}">${t.priority}</span>
-                    <span class="task-assignee">${AGENTS[t.assignee]?.emoji || ''} ${t.assignee}</span>
-                </div>
-            </div>
-        </div>
-    `).join('');
-
-    // Dashboard shows open + high priority
-    const dashFiltered = state.tasks.filter(t => !t.completed && t.priority === 'high').slice(0, 5);
-    dashList.innerHTML = dashFiltered.map(t => `
-        <div class="task-item">
-            <div class="task-check" onclick="toggleTask(${t.id})"></div>
-            <div class="task-info">
-                <div class="task-title">${t.title}</div>
-                <div class="task-meta">
-                    <span class="task-priority priority-${t.priority}">${t.priority}</span>
-                    <span class="task-assignee">${AGENTS[t.assignee]?.emoji || ''} ${t.assignee}</span>
-                </div>
-            </div>
-        </div>
-    `).join('');
-
-    document.getElementById('taskBadge').textContent = state.tasks.filter(t => !t.completed).length;
-}
-
-// ═══════════ ACTIVITY ═══════════
-function addActivity(color, text) {
-    const activity = { color, text, time: new Date() };
-    state.activities.unshift(activity);
-    renderActivities();
-}
-
-function renderActivities() {
-    const feed = document.getElementById('activityFeed');
-    const dashFeed = document.getElementById('dashboardActivity');
-
-    const html = state.activities.slice(0, 50).map(a => `
-        <div class="activity-item">
-            <div class="activity-dot ${a.color}"></div>
-            <div class="activity-content">
-                <div class="activity-text">${a.text}</div>
-                <div class="activity-time">${formatTime(a.time)}</div>
-            </div>
-        </div>
-    `).join('');
-
-    feed.innerHTML = html;
-    dashFeed.innerHTML = state.activities.slice(0, 6).map(a => `
-        <div class="activity-item">
-            <div class="activity-dot ${a.color}"></div>
-            <div class="activity-content">
-                <div class="activity-text">${a.text}</div>
-                <div class="activity-time">${formatTime(a.time)}</div>
-            </div>
-        </div>
-    `).join('');
-}
-
-function formatTime(d) {
-    const now = new Date();
-    const diff = Math.floor((now - d) / 1000);
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-    return d.toLocaleDateString();
-}
-
-// ═══════════ MESSAGES ═══════════
-function selectAgent(agent, btn) {
-    state.currentAgent = agent;
-    document.querySelectorAll('#page-direct .filter-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    renderMessages();
-}
-
-function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const text = input.value.trim();
-    if (!text) return;
-
-    if (!state.messages[state.currentAgent]) state.messages[state.currentAgent] = [];
-    state.messages[state.currentAgent].push({ from: 'Moses', text, time: new Date() });
-
-    input.value = '';
-    renderMessages();
-
-    // Simulate agent response
-    setTimeout(() => {
-        const responses = getAgentResponse(state.currentAgent, text);
-        state.messages[state.currentAgent].push({ from: state.currentAgent, text: responses, time: new Date() });
-        renderMessages();
-        addActivity(AGENTS[state.currentAgent].color, `<strong>${state.currentAgent}</strong> responded to Moses`);
-    }, 800 + Math.random() * 1200);
-}
-
-function getAgentResponse(agent, msg) {
-    const responses = {
-        Zeus: [
-            "⚡ Copy that. I'll coordinate with the team and have an update within the hour.",
-            "⚡ Acknowledged. Dispatching to the appropriate agent now.",
-            "⚡ On it, Moses. I'll ensure this gets prioritized.",
-            "⚡ Understood. Let me pull the latest status from the team.",
-            "⚡ Roger that. This is now top priority."
-        ],
-        Athena: [
-            "🦉 Interesting directive. Let me analyze the landscape and get back to you with data.",
-            "🦉 I'll research this thoroughly and prepare a strategic brief.",
-            "🦉 Acknowledged. Running analysis now — expect insights shortly.",
-            "🦉 Good call. I see several angles worth exploring here.",
-            "🦉 On it. I'll compile findings and present options."
-        ],
-        Hermes: [
-            "🪽 Got it! I'll draft communications and coordinate logistics.",
-            "🪽 On it — I'll handle the outreach and keep everyone in the loop.",
-            "🪽 Consider it done. I'll schedule and follow up accordingly.",
-            "🪽 Absolutely. Let me get the wheels turning on this.",
-            "🪽 Message received. I'll draft something and have it ready for your review."
-        ],
-        Vulcan: [
-            "🔨 Building it now. I'll have a working version ready soon.",
-            "🔨 Acknowledged. Technical specs are clear — deploying now.",
-            "🔨 On it. This is right in my wheelhouse.",
-            "🔨 Consider it forged. Working on implementation.",
-            "🔨 Got it. I'll architect the solution and report back."
-        ]
-    };
-    const pool = responses[agent] || responses.Zeus;
-    return pool[Math.floor(Math.random() * pool.length)];
-}
-
-function renderMessages() {
-    const container = document.getElementById('messagesContainer');
-    const msgs = state.messages[state.currentAgent] || [];
-    container.innerHTML = msgs.map(m => `
-        <div class="message-bubble ${m.from === 'Moses' ? 'from-user' : 'from-agent'}">
-            ${m.from !== 'Moses' ? `<div class="msg-sender">${AGENTS[m.from]?.emoji || ''} ${m.from}</div>` : ''}
-            ${m.text}
-            <div class="msg-time">${formatTime(m.time)}</div>
-        </div>
-    `).join('');
-    container.scrollTop = container.scrollHeight;
-}
-
-// ═══════════ COMMANDS ═══════════
-function runCommand(cmd) {
-    const actions = {
-        status: () => {
-            addActivity('gold', '<strong>Moses</strong> requested Status Report');
-            addActivity('blue', '<strong>Zeus</strong>: All 3 agents online. 0 critical issues. Systems nominal.');
-            addActivity('blue', '<strong>Athena</strong>: No pending research tasks.');
-            addActivity('green', '<strong>Hermes</strong>: No pending communications.');
-            addActivity('purple', '<strong>Vulcan</strong>: Infrastructure stable. All builds passing.');
-        },
-        standup: () => {
-            addActivity('gold', '<strong>Moses</strong> initiated Daily Standup');
-            addActivity('blue', '<strong>Zeus</strong>: Coordinating operations. Standing by for directives.');
-            addActivity('blue', '<strong>Athena</strong>: Monitoring market trends. Ready for analysis tasks.');
-            addActivity('green', '<strong>Hermes</strong>: Calendar clear. Ready for outreach.');
-            addActivity('purple', '<strong>Vulcan</strong>: Dev environment hot. Ready to build.');
-        },
-        priority: () => {
-            addActivity('gold', '<strong>Moses</strong> ran Priority Check');
-            const high = state.tasks.filter(t => !t.completed && t.priority === 'high');
-            addActivity('blue', high.length ? `${high.length} high-priority tasks pending` : 'No high-priority items. Clear skies.');
-        },
-        research: () => {
-            const topic = prompt('What should Athena research?');
-            if (topic) {
-                state.tasks.unshift({ id: ++state.taskIdCounter, title: `Research: ${topic}`, assignee: 'Athena', priority: 'high', completed: false, created: new Date() });
-                renderTasks(); updateStats();
-                addActivity('gold', `<strong>Moses</strong> assigned research to <strong>Athena</strong>: "${topic}"`);
-                addActivity('blue', '<strong>Athena</strong>: Accepted. Beginning analysis.');
-            }
-        },
-        outreach: () => {
-            const target = prompt('Who should Hermes reach out to?');
-            if (target) {
-                state.tasks.unshift({ id: ++state.taskIdCounter, title: `Draft outreach to: ${target}`, assignee: 'Hermes', priority: 'medium', completed: false, created: new Date() });
-                renderTasks(); updateStats();
-                addActivity('gold', `<strong>Moses</strong> tasked <strong>Hermes</strong> with outreach to "${target}"`);
-                addActivity('green', '<strong>Hermes</strong>: On it. Drafting now.');
-            }
-        },
-        build: () => {
-            const project = prompt('What should Vulcan build?');
-            if (project) {
-                state.tasks.unshift({ id: ++state.taskIdCounter, title: `Build: ${project}`, assignee: 'Vulcan', priority: 'high', completed: false, created: new Date() });
-                renderTasks(); updateStats();
-                addActivity('gold', `<strong>Moses</strong> tasked <strong>Vulcan</strong>: "${project}"`);
-                addActivity('purple', '<strong>Vulcan</strong>: Forging. ETA incoming.');
-            }
-        }
-    };
-    if (actions[cmd]) actions[cmd]();
-    switchPage('activity');
-}
-
-// ═══════════ STATS ═══════════
-function updateStats() {
-    document.getElementById('statOpenTasks').textContent = state.tasks.filter(t => !t.completed).length;
-    document.getElementById('statCompleted').textContent = state.completedToday;
-}
-
-// ═══════════ INIT ═══════════
-function init() {
-    // Seed some starter tasks
-    state.tasks = [
-        { id: ++state.taskIdCounter, title: 'Set up daily briefing schedule', assignee: 'Zeus', priority: 'high', completed: false, created: new Date() },
-        { id: ++state.taskIdCounter, title: 'Research competitor landscape', assignee: 'Athena', priority: 'medium', completed: false, created: new Date() },
-        { id: ++state.taskIdCounter, title: 'Draft welcome email template', assignee: 'Hermes', priority: 'low', completed: false, created: new Date() },
-        { id: ++state.taskIdCounter, title: 'Configure monitoring dashboard', assignee: 'Vulcan', priority: 'medium', completed: false, created: new Date() },
-    ];
-
-    state.activities = [
-        { color: 'gold', text: '<strong>Olympus</strong> system initialized', time: new Date() },
-        { color: 'gold', text: '<strong>Moses</strong> — CEO onboarded', time: new Date() },
-        { color: 'blue', text: '<strong>Zeus</strong> — COO online and operational', time: new Date() },
-        { color: 'blue', text: '<strong>Athena</strong> — Strategy agent deployed', time: new Date() },
-        { color: 'green', text: '<strong>Hermes</strong> — Comms agent deployed', time: new Date() },
-        { color: 'purple', text: '<strong>Vulcan</strong> — Engineering agent deployed', time: new Date() },
-    ];
-
-    Object.keys(AGENTS).forEach(a => { state.messages[a] = []; });
-
-    renderTasks();
-    renderActivities();
-    updateStats();
-
-    // Simulate periodic agent activity
-    setInterval(() => {
-        const agents = ['Zeus', 'Athena', 'Hermes', 'Vulcan'];
-        const agent = agents[Math.floor(Math.random() * agents.length)];
-        const idle = ['Monitoring systems...', 'Scanning for updates...', 'Standing by...', 'Reviewing queue...', 'Running diagnostics...'];
-        // Light background activity (no spam)
-    }, 60000);
-}
-
-// Enter key on login
-document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
-document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
 </script>
-
 </body>
 </html>
