@@ -475,15 +475,20 @@ function load(){try{const d=localStorage.getItem('olympus');if(d){const p=JSON.p
 
 // ═══════ LOGIN ═══════
 function doLogin(){
-try{
-if(document.getElementById('lUser').value==='admin'&&document.getElementById('lPass').value==='olympus2025'){
-document.getElementById('login').classList.add('hidden');
-document.getElementById('app').classList.add('on');
-load();init();addAct('gold','<strong>Moses</strong> signed in');
-}else{document.getElementById('lErr').textContent='Invalid credentials'}
-}catch(e){document.getElementById('lErr').textContent='Error: '+e.message}
+  var u = document.getElementById('lUser').value;
+  var p = document.getElementById('lPass').value;
+  if(u === 'admin' && p === 'olympus2025'){
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('app').classList.add('on');
+    load();
+    init();
+    addAct('gold','<strong>Moses</strong> signed in');
+  } else {
+    document.getElementById('lErr').textContent = 'Invalid credentials';
+  }
 }
-function doLogout(){document.getElementById('login').classList.remove('hidden');document.getElementById('app').classList.remove('on')}
+function doLogout(){document.getElementById('app').style.display='none';document.getElementById('login').style.display='flex';document.getElementById('login').classList.remove('hidden')}
 document.getElementById('lPass').onkeydown=e=>{if(e.key==='Enter')doLogin()};
 document.getElementById('lUser').onkeydown=e=>{if(e.key==='Enter')document.getElementById('lPass').focus()};
 
