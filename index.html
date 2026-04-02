@@ -470,15 +470,18 @@ drawP();
 const AG={Zeus:{e:'⚡',c:'z',r:'COO'},Athena:{e:'🦉',c:'a',r:'Strategy'},Hermes:{e:'🪽',c:'h',r:'Comms'},Vulcan:{e:'🔨',c:'v',r:'Engineering'}};
 let S={tasks:[],act:[],chats:{},chatTarget:'All',done:0,ret:4};
 
-function save(){localStorage.setItem('olympus',JSON.stringify(S))}
-function load(){const d=localStorage.getItem('olympus');if(d)S=JSON.parse(d)}
+function save(){try{localStorage.setItem('olympus',JSON.stringify(S))}catch(e){}}
+function load(){try{const d=localStorage.getItem('olympus');if(d){const p=JSON.parse(d);if(p&&typeof p==='object')Object.assign(S,p)}}catch(e){localStorage.removeItem('olympus')}}
 
 // ═══════ LOGIN ═══════
 function doLogin(){
+try{
 if(document.getElementById('lUser').value==='admin'&&document.getElementById('lPass').value==='olympus2025'){
-document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.on=true;document.getElementById('app').classList.add('on');
+document.getElementById('login').classList.add('hidden');
+document.getElementById('app').classList.add('on');
 load();init();addAct('gold','<strong>Moses</strong> signed in');
-}else document.getElementById('lErr').textContent='Invalid credentials';
+}else{document.getElementById('lErr').textContent='Invalid credentials'}
+}catch(e){document.getElementById('lErr').textContent='Error: '+e.message}
 }
 function doLogout(){document.getElementById('login').classList.remove('hidden');document.getElementById('app').classList.remove('on')}
 document.getElementById('lPass').onkeydown=e=>{if(e.key==='Enter')doLogin()};
